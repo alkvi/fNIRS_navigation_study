@@ -1,0 +1,674 @@
+---
+title: "Navigation study - clustering"
+bibliography: /Users/alexander.kvist/Zotero/zotero_library.bib
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+    toc-expand: 2
+    theme: flatly
+  
+editor: source
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=10, fig.height=5) 
+
+# load library
+library(arsenal)
+library(labelled)
+
+library(ggpubr)
+library(ggplot2)
+library(patchwork)
+
+library(gt)
+library(gtExtras)
+
+library(randomForest)
+library(factoextra)
+library(gridExtra)
+library(missForest)
+library(cluster)
+library(NbClust)
+
+set.seed(123)
+
+```
+
+# What do we want to do?
+
+Because there might be many ways to "perform well" during this type of navigated walking, we want to take all performance variables (gait speed, turning speed, step times, and so on) and see which clusters are formed.
+
+Then we can characterize these clusters with demographic, clinical, and fNIRS data.
+
+# Performance variables
+
+Which performance variables do we have?
+
+We can consider some different domains.
+
+~~~
+- Step Time Variability
+
+- Cadence
+- Single Support
+- Step Time 
+- Stride Length
+- Walking Speed
+- Stance Time
+
+- Turn Velocity (peak)
+
+- Auditory Stroop accuracy
+- Auditory Stroop reaction time
+- Navigation mistakes
+- Navigation hesitations
+~~~
+
+# Data loading
+
+Load all data and set up a dataframe with a row for each subject.
+
+```{r}
+
+source("../scripts/performance_data.R")
+source("../scripts/subject_data.R")
+
+performance_data <- load_subject_performance_data()
+subject_data <- load_subject_data()
+
+# Fix outlier in gait variables - two unreasonable values for step time var (>100)
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+
+# Also in navigation performance, two people who did not understand task
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+
+# Now select the performance variables we need
+variable_list = c("subject",
+                  "group",
+                  "mean_single_support_protocol2_ST_navigation",
+                  "mean_single_support_protocol3_ST_navigation",
+                  "mean_cadence_protocol2_ST_navigation",
+                  "mean_cadence_protocol3_ST_navigation",
+                  "mean_stride_length_protocol2_ST_navigation",
+                  "mean_stride_length_protocol3_ST_navigation",
+                  "mean_walking_speed_protocol2_ST_navigation",
+                  "mean_walking_speed_protocol3_ST_navigation",
+                  "mean_stance_time_protocol2_ST_navigation",
+                  "mean_stance_time_protocol3_ST_navigation",
+                  "step_time_variability_protocol2_ST_navigation",
+                  "step_time_variability_protocol3_ST_navigation",
+                  "turns_velocity_protocol_2",
+                  "turns_velocity_protocol_3",
+                  "dt_cost_walk_speed_protocol3",
+                  "dt_cost_step_time_variability_protocol3",
+                  "dt_cost_stride_length_protocol3",
+                  "dt_cost_cadence_protocol3",
+                  "dt_cost_single_support_protocol3",
+                  "DT_protocol_3_stroop_time",
+                  "nav_s2_hesitation",
+                  "nav_s2_wrong",
+                  "acc_s3_hesitation_tot",
+                  "acc_s3_wrong_tot")
+
+performance_data_nav <- performance_data[variable_list]
+
+# We have single-task navigation (ST_nav) in both protocol 2 and 3.
+# Instead of using each value several times, create an average.
+# List of prefixes to average
+prefixes <- c("mean_single_support", "mean_cadence", "mean_stride_length",
+              "mean_walking_speed", "mean_stance_time", "step_time_variability")
+
+# Loop through each prefix and create a new average column
+for (prefix in prefixes) {
+  # Find columns that match the prefix and contain "ST_navigation"
+  cols_to_average <- grep(paste0("^", prefix, ".*ST_navigation"), names(performance_data_nav), value = TRUE)
+  
+  # Create new column with the average
+  new_col_name <- paste0(prefix, "_ST_navigation")
+  performance_data_nav[[new_col_name]] <- rowMeans(performance_data_nav[cols_to_average], na.rm = TRUE)
+  performance_data_nav <- performance_data_nav[ , !(names(performance_data_nav) %in% cols_to_average)]
+}
+
+# Finally average mistakes in the same way - hesitation count and mistake count
+performance_data_nav$average_nav_hesitation <- rowMeans(performance_data_nav[, c("nav_s2_hesitation", 
+                                                                                 "acc_s3_hesitation_tot")], na.rm = TRUE)
+performance_data_nav$average_nav_wrong <- rowMeans(performance_data_nav[, c("nav_s2_wrong", 
+                                                                            "acc_s3_wrong_tot")], na.rm = TRUE)
+
+# Filter out the non-averaged values
+performance_data_nav <- performance_data_nav[ , !(names(performance_data_nav) %in% c("nav_s2_hesitation", 
+                                                                                     "nav_s2_wrong",
+                                                                                     "acc_s3_hesitation_tot",
+                                                                                     "acc_s3_wrong_tot"))]
+
+# For visualizations: replace subject code with row number
+# Create mapping: original subject code -> temporary ID
+subject_map <- setNames(performance_data_nav$subject, seq_len(nrow(performance_data_nav)))
+
+# Replace subject column with temporary IDs
+performance_data_nav$subject <- as.factor(names(subject_map))
+
+```
+
+# Clustering functions
+
+Set up clustering functions, using the randomForest package.
+
+We will do hierarchical clustering using a distance matrix from random forest with 20 000 trees.
+
+Variable importance plots are also generated with the varImpPlot function.
+
+```{r}
+
+run_clustering_rf <- function (df, k) {
+  
+  # Run Random Forest
+  rf <- randomForest(x = df, y = NULL, ntree = 20000, proximity = TRUE, oob.prox = TRUE)
+  
+  # Hierarchical clustering
+  d <- as.dist(1 - rf$proximity)
+  hc <- hclust(d, method = "ward.D2")
+  cluster <- cutree(hc, k = k)
+  
+  # MDS for visualization
+  mds <- cmdscale(d, k = k)
+  
+  # Plot
+  plot(mds, col = cluster, pch = 19, xlab = "MDS1", ylab = "MDS2", main = "RF Clustering Visualization")
+  text(mds, labels = rownames(df), pos = 3, cex = 0.7)
+  legend("topright", legend = unique(cluster), col = unique(cluster), pch = 19)
+  
+  suppressWarnings(
+    print(fviz_dend(hc, k = k, show_labels = TRUE, rect = TRUE))
+  )
+  
+  # Use clustering result as a pseudo-response
+  rf_supervised <- randomForest(x = df, y = as.factor(cluster), importance = TRUE)
+  importance(rf_supervised)
+  varImpPlot(rf_supervised)
+  
+  return(cluster)
+
+}
+
+check_pcs <- function (df) {
+  
+  pcadata <- prcomp(df,  scale = TRUE)
+
+  # Variable contribution
+  p <- fviz_cos2(pcadata, choice = "var", axes = 1, xtickslab.rt = 90)
+  print(p)
+  p <- fviz_cos2(pcadata, choice = "var", axes = 2, xtickslab.rt = 90)
+  print(p)
+  
+}
+
+set_subject_rownames <- function (df) {
+  df <- df %>% select(-group)
+  rownames(df) <- NULL
+  rownames(df) <- df$subject
+  df <- df %>% select(-subject)
+  return(df)
+}
+
+```
+
+# Number of clusters - OA
+
+Determine the optimal amount of clusters. There are many ways to do this.
+
+For example, we can visualize the silhouette score.
+
+Or, we can determine the optimal number of clusters with [NbClust](https://cran.r-project.org/web/packages/NbClust/index.html) which tests 30 different types of cluster statistics. Then it does majority voting on that.
+
+In either case, it looks like we get 2 clusters.
+
+```{r}
+
+df_oa <- performance_data_nav %>%
+  filter(group == "OA")
+df_oa <- set_subject_rownames(df_oa)
+
+df_oa_imputed <- missForest(df_oa)$ximp
+df_oa_norm <- df_oa_imputed %>%
+  mutate(across(everything(), ~ (.-mean(., na.rm = TRUE)) / sd(., na.rm = TRUE)))
+
+# Optimal number
+fviz_nbclust(df_oa_imputed, hcut, method = "silhouette")
+
+# Capture all output from NbClust
+output <- capture.output({
+  res_nbclust <- NbClust(df_oa_imputed,
+                         distance = "euclidean",
+                         min.nc = 2, max.nc = 10,
+                         method = "ward.D2", index = "all")
+})
+
+# Filter lines that match a pattern
+allowed_lines <- grep("the best number of clusters", output, value = TRUE)
+
+# Print only those lines
+cat(paste(allowed_lines, collapse = "\n"), "\n")
+
+```
+
+# Run clustering - OA
+
+Now we run the clustering with the optimal amount of clusters.
+
+We will see the clusters visualized with MDS and dendrogram.
+
+Also which variables contribute to separating the clusters.
+
+```{r}
+
+# Get clusters
+cluster_rf_oa <- run_clustering_rf(df_oa_imputed, 2)
+
+```
+
+Let's also visualize the clusters in terms of principal components in the dataset.
+
+```{r}
+#| warning: false
+
+# PCA for visualizing
+pcs <- prcomp(df_oa_norm, center = FALSE, scale. = FALSE)$x %>% as.data.frame()
+pcs$Cluster <- factor(cluster_rf_oa)
+pcs$Subject <- rownames(df_oa_norm)
+
+# Compute convex hulls for each cluster
+hulls <- pcs %>%
+  group_by(Cluster) %>%
+  slice(chull(PC1, PC2))
+
+# Plot the first two principal components
+ggplot(pcs, aes(x = PC1, y = PC2, color = Cluster, label = Subject)) +
+  geom_polygon(data = hulls, aes(fill = Cluster), alpha = 0.2, color = NA) +
+  geom_point(size = 3) +
+  geom_text(vjust = -0.5, hjust = 0.5, size = 3) +
+  labs(title = "PCA Plot Colored by Random Forest Clusters",
+       x = "PC1", y = "PC2") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
+
+check_pcs(df_oa_norm)
+
+
+```
+
+# Number of clusters - PD
+
+```{r}
+
+df_pd <- performance_data_nav %>%
+  filter(group == "PD")
+df_pd <- set_subject_rownames(df_pd)
+
+df_pd_imputed <- missForest(df_pd)$ximp
+df_pd_norm <- df_pd_imputed %>%
+  mutate(across(everything(), ~ (.-mean(., na.rm = TRUE)) / sd(., na.rm = TRUE)))
+
+# Optimal number
+fviz_nbclust(df_pd_imputed, hcut, method = "silhouette")
+
+# Capture all output from NbClust
+output <- capture.output({
+  res_nbclust <- NbClust(df_oa_imputed,
+                         distance = "euclidean",
+                         min.nc = 2, max.nc = 10,
+                         method = "ward.D2", index = "all")
+})
+
+# Filter lines that match a pattern
+allowed_lines <- grep("the best number of clusters", output, value = TRUE)
+
+# Print only those lines
+cat(paste(allowed_lines, collapse = "\n"), "\n")
+
+```
+
+# Run clustering - PD
+
+```{r}
+
+# Get clusters
+cluster_rf_pd <- run_clustering_rf(df_pd_imputed, 2)
+
+```
+
+Visualize the clusters
+
+```{r}
+#| warning: false
+
+# PCA for visualizing
+pcs <- prcomp(df_pd_norm, center = FALSE, scale. = FALSE)$x %>% as.data.frame()
+pcs$Cluster <- factor(cluster_rf_pd)
+pcs$Subject <- rownames(df_pd_norm)
+
+# Compute convex hulls for each cluster
+hulls <- pcs %>%
+  group_by(Cluster) %>%
+  slice(chull(PC1, PC2))
+
+# Plot the first two principal components
+ggplot(pcs, aes(x = PC1, y = PC2, color = Cluster, label = Subject)) +
+  geom_polygon(data = hulls, aes(fill = Cluster), alpha = 0.2, color = NA) +
+  geom_point(size = 3) +
+  geom_text(vjust = -0.5, hjust = 0.5, size = 3) +
+  labs(title = "PCA Plot Colored by Random Forest Clusters",
+       x = "PC1", y = "PC2") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Set1")
+
+check_pcs(df_pd_norm)
+
+```
+
+# By actual variables - OA
+
+We can plot the clusters in terms of actual performance variables and look at the separation.
+
+```{r}
+
+plot_vars <- function(data, x_var, y_var) {
+  hulls <- data %>%
+    group_by(cluster) %>%
+    slice(chull(.data[[x_var]], .data[[y_var]]))
+
+  gg_point <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]], color = cluster)) +
+    geom_polygon(data = hulls, aes(fill = cluster), alpha = 0.2, color = NA) +
+    geom_point(size = 3) +
+    geom_text(aes(label = subject), vjust = -0.5, size = 3) +
+    labs(x = x_var, y = y_var, title = "Plot RF") +
+    theme_minimal() +
+    scale_color_brewer(palette = "Set1") +
+    scale_fill_brewer(palette = "Set1")
+
+  print(gg_point)
+}
+
+
+performance_data_oa <- df_oa_imputed
+performance_data_oa$subject <- rownames(performance_data_oa)
+performance_data_oa$cluster <- as.factor(cluster_rf_oa)
+
+plot_vars(performance_data_oa, "mean_stance_time_ST_navigation", "mean_stride_length_ST_navigation")
+plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "turns_velocity_protocol_2")
+plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "mean_stride_length_ST_navigation")
+plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "mean_cadence_ST_navigation")
+
+```
+
+# By actual variables - PD
+
+```{r}
+
+performance_data_pd <- df_pd_imputed
+performance_data_pd$subject <- rownames(performance_data_pd)
+performance_data_pd$cluster <- as.factor(cluster_rf_pd)
+
+plot_vars(performance_data_pd, "mean_stance_time_ST_navigation", "mean_stride_length_ST_navigation")
+plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "turns_velocity_protocol_2")
+plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "mean_stride_length_ST_navigation")
+plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "mean_cadence_ST_navigation")
+
+```
+
+# Demographics and gait variables - OA
+
+This is using the [*tableby*](https://cran.r-project.org/web/packages/arsenal/vignettes/tableby.html) function, with test=KWT.
+
+```{r, results='asis'}
+
+# Place subject code back into subject column
+performance_data_nav$subject <- subject_map[as.character(performance_data_nav$subject)]
+performance_data_pd$subject <- subject_map[as.character(performance_data_pd$subject)]
+performance_data_oa$subject <- subject_map[as.character(performance_data_oa$subject)]
+
+group_str = "OA"
+subj_cluster <- performance_data_oa[c("subject", "cluster")]
+write.csv(subj_cluster,"../data/clusters_oa.csv", row.names = FALSE)
+
+subject_data_group <- subject_data %>%
+  filter(group == group_str)
+performance_data_group <- performance_data %>%
+  filter(group == group_str)
+
+subject_data_cluster <- merge(subject_data_group, subj_cluster, by = "subject", all = TRUE)
+performance_data_cluster <- merge(performance_data_group, subj_cluster, by = "subject", all = TRUE)
+
+subject_data_cluster <- copy_labels(subject_data, subject_data_cluster)
+performance_data_cluster <- copy_labels(performance_data, performance_data_cluster)
+
+# https://cran.r-project.org/web/packages/arsenal/vignettes/tableby.html
+
+# Properties for all tables
+mycontrols  <- tableby.control(numeric.test="kwt", cat.test="chisq",  cat.simplify = TRUE, cat.stats="countpct",
+                               numeric.simplify=TRUE, numeric.stats=c("meansd"),
+                               digits=2, digits.p=2, digits.pct=1)
+
+# Create tables
+tab1 <- tableby(cluster ~ sex + age + crf_utbildning_ar + weight + height + frandin_grimby.x + ramlat_12_man,
+                data=subject_data_cluster, control=mycontrols)
+
+tab2 <- tableby(cluster ~ mb_total + g12_sum + tmt_2 + tmt_4 + tmt_4_tmt_2_contrast + cwit_3 + ravlt_ret,
+                data=subject_data_cluster, control=mycontrols)
+
+tab3 <- tableby(cluster ~
+                mean_walking_speed_protocol1_ST_walk +
+                mean_walking_speed_protocol1_DT_walk + 
+                mean_stride_length_protocol1_ST_walk +
+                mean_stride_length_protocol1_DT_walk + 
+                mean_step_time_protocol1_ST_walk +
+                mean_step_time_protocol1_DT_walk + 
+                step_time_variability_protocol1_ST_walk +
+                step_time_variability_protocol1_DT_walk +
+                dt_cost_walk_speed_protocol1 + 
+                dt_cost_stride_length_protocol1,
+                data=performance_data_cluster, control=mycontrols)
+
+tab4 <- tableby(cluster ~ 
+                mean_walking_speed_protocol2_ST_walk +
+                mean_walking_speed_protocol2_ST_navigation +
+                mean_stride_length_protocol2_ST_walk +
+                mean_stride_length_protocol2_ST_navigation + 
+                mean_step_time_protocol2_ST_walk +
+                mean_step_time_protocol2_ST_navigation +
+                step_time_variability_protocol2_ST_walk +
+                step_time_variability_protocol2_ST_navigation +
+                turns_velocity_protocol_2 +
+                nav_s2_hesitation +
+                nav_s2_wrong,
+                data=performance_data_cluster, control=mycontrols)
+
+tab5 <- tableby(cluster ~ 
+                mean_walking_speed_protocol3_ST_navigation +
+                mean_walking_speed_protocol3_DT_navigation + 
+                mean_stride_length_protocol3_ST_navigation +
+                mean_stride_length_protocol3_DT_navigation + 
+                mean_step_time_protocol3_ST_navigation +
+                mean_step_time_protocol3_DT_navigation + 
+                step_time_variability_protocol3_ST_navigation +
+                step_time_variability_protocol3_DT_navigation +
+                dt_cost_walk_speed_protocol3 + 
+                dt_cost_stride_length_protocol3 + 
+                dt_cost_step_time_variability_protocol3 +
+                turns_velocity_protocol_3 +
+                acc_s3_hesitation_tot +
+                acc_s3_wrong_tot,
+                data=performance_data_cluster, control=mycontrols)
+
+tab6 <- tableby(cluster ~ DT_protocol_3_stroop_acc + DT_protocol_3_stroop_time,
+                data=performance_data_cluster, control=mycontrols)
+
+```
+
+```{r, results='asis'}
+
+summary(tab1, title = "demographics")
+summary(tab2, title = "clinical & neuropsychological")
+summary(tab3, title = "Gait variables, protocol 1")
+summary(tab4, title = "Gait variables, protocol 2")
+summary(tab5, title = "Gait variables, protocol 3")
+summary(tab6, title = "Auditory Stroop, protocol 3")
+
+```
+
+# Demographics and gait variables - PD
+
+```{r, results='asis'}
+
+group_str = "PD"
+subj_cluster <- performance_data_pd[c("subject", "cluster")]
+write.csv(subj_cluster,"../data/clusters_pd.csv", row.names = FALSE)
+
+subject_data_group <- subject_data %>%
+  filter(group == group_str)
+performance_data_group <- performance_data %>%
+  filter(group == group_str)
+
+subject_data_cluster <- merge(subject_data_group, subj_cluster, by = "subject", all = TRUE)
+performance_data_cluster <- merge(performance_data_group, subj_cluster, by = "subject", all = TRUE)
+
+subject_data_cluster <- copy_labels(subject_data, subject_data_cluster)
+performance_data_cluster <- copy_labels(performance_data, performance_data_cluster)
+
+# https://cran.r-project.org/web/packages/arsenal/vignettes/tableby.html
+
+# Properties for all tables
+mycontrols  <- tableby.control(numeric.test="kwt", cat.test="chisq",  cat.simplify = TRUE, cat.stats="countpct",
+                               numeric.simplify=TRUE, numeric.stats=c("meansd"),
+                               digits=2, digits.p=2, digits.pct=1)
+
+# No good function for creating sub-headings in the table
+# But we could create separate tables for display for now (and then all together for correct statistics later)
+tab1 <- tableby(cluster ~ sex + age + crf_utbildning_ar + weight + height + frandin_grimby.x + ramlat_12_man,
+                data=subject_data_cluster, control=mycontrols)
+
+
+tab2 <- tableby(cluster ~ mb_total + g12_sum + tmt_2 + tmt_4 + tmt_4_tmt_2_contrast + cwit_3 + ravlt_ret,
+                data=subject_data_cluster, control=mycontrols)
+
+
+
+tab3 <- tableby(cluster ~
+                mean_walking_speed_protocol1_ST_walk +
+                mean_walking_speed_protocol1_DT_walk + 
+                mean_stride_length_protocol1_ST_walk +
+                mean_stride_length_protocol1_DT_walk + 
+                mean_step_time_protocol1_ST_walk +
+                mean_step_time_protocol1_DT_walk + 
+                step_time_variability_protocol1_ST_walk +
+                step_time_variability_protocol1_DT_walk +
+                dt_cost_walk_speed_protocol1 + 
+                dt_cost_stride_length_protocol1,
+                data=performance_data_cluster, control=mycontrols)
+
+tab4 <- tableby(cluster ~ 
+                mean_walking_speed_protocol2_ST_walk +
+                mean_walking_speed_protocol2_ST_navigation +
+                mean_stride_length_protocol2_ST_walk +
+                mean_stride_length_protocol2_ST_navigation + 
+                mean_step_time_protocol2_ST_walk +
+                mean_step_time_protocol2_ST_navigation +
+                step_time_variability_protocol2_ST_walk +
+                step_time_variability_protocol2_ST_navigation +
+                turns_velocity_protocol_2 +
+                nav_s2_hesitation +
+                nav_s2_wrong,
+                data=performance_data_cluster, control=mycontrols)
+
+
+tab5 <- tableby(cluster ~ 
+                mean_walking_speed_protocol3_ST_navigation +
+                mean_walking_speed_protocol3_DT_navigation + 
+                mean_stride_length_protocol3_ST_navigation +
+                mean_stride_length_protocol3_DT_navigation + 
+                mean_step_time_protocol3_ST_navigation +
+                mean_step_time_protocol3_DT_navigation + 
+                step_time_variability_protocol3_ST_navigation +
+                step_time_variability_protocol3_DT_navigation +
+                dt_cost_walk_speed_protocol3 + 
+                dt_cost_stride_length_protocol3 + 
+                dt_cost_step_time_variability_protocol3 +
+                turns_velocity_protocol_3 +
+                acc_s3_hesitation_tot +
+                acc_s3_wrong_tot,
+                data=performance_data_cluster, control=mycontrols)
+
+
+labels(performance_data_cluster)  <- c(
+  DT_protocol_3_stroop_acc = "Accuracy (DT), %",
+  DT_protocol_3_stroop_time = "Answer time (DT), s")
+  
+tab6 <- tableby(cluster ~ DT_protocol_3_stroop_acc + DT_protocol_3_stroop_time,
+                data=performance_data_cluster, control=mycontrols)
+
+```
+
+```{r, results='asis'}
+
+summary(tab1, title = "demographics")
+summary(tab2, title = "clinical & neuropsychological")
+summary(tab3, title = "Gait variables, protocol 1")
+summary(tab4, title = "Gait variables, protocol 2")
+summary(tab5, title = "Gait variables, protocol 3")
+summary(tab6, title = "Auditory Stroop, protocol 3")
+
+```
+
+# Disease severity - PD
+
+```{r, results='asis'}
+
+updrs_file <- paste("../../Park-MOVE_fnirs_dataset_v2/REDcap_data/UPDRS_data.csv", sep="")
+measurement_date_file <- paste("../../Park-MOVE_fnirs_dataset_v2/measurement_dates.csv", sep="")
+
+updrs_data <- read.csv(updrs_file)
+updrs_data$updrs_3_total <- rowSums(updrs_data[, 35:66], na.rm = TRUE)
+updrs_data <- updrs_data[c("id_nummer", "updrs_3_total")]
+names(updrs_data)[names(updrs_data) == 'id_nummer'] <- 'subject'
+
+# Get disease duration via diagnosis date and measurement date
+diagnosis_data <- subject_data_cluster[c("subject", "crf_pd_year_phone")]
+measurement_dates <- read.csv(measurement_date_file, sep=";")
+measurement_dates$measurement_date_t1 <- as.Date(measurement_dates$measurement_date_t1, format = "%Y-%m-%d")
+measurement_dates$year <- format(measurement_dates$measurement_date_t1, "%Y")
+measurement_dates <- measurement_dates[c("subject", "year")]
+measurement_dates <- merge(diagnosis_data, measurement_dates, by = "subject", all = TRUE)
+measurement_dates$disease_dur <- as.numeric(measurement_dates$year) - as.numeric(measurement_dates$crf_pd_year_phone)
+measurement_dates <- measurement_dates[c("subject", "disease_dur")]
+
+# Add measurment dates
+subject_data_cluster <- merge(subject_data_cluster, measurement_dates, by = "subject", all = FALSE)
+subject_data_cluster <- merge(subject_data_cluster, updrs_data, by = "subject", all = FALSE)
+
+tab7 <- tableby(cluster ~ led_total + updrs_3_total + disease_dur,
+                data=subject_data_cluster, control=mycontrols)
+summary(tab7, title = "Disease severity")
+
+```

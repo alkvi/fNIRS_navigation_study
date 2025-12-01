@@ -1,0 +1,182 @@
+---
+title: "Navigation study - data driven"
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    embed-resources: true
+    toc: true
+    toc-depth: 2
+    toc-expand: 2
+    theme: flatly
+  
+editor: source
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=10, fig.height=5) 
+
+# load library
+library(ggpubr)
+library(ggplot2)
+library(patchwork)
+library(labelled)
+library(arsenal)
+library(gt)
+library(gtExtras)
+library(rstatix)
+
+```
+
+# Data
+
+Load data
+
+```{r}
+
+source("../scripts/performance_data.R")
+source("../scripts/subject_data.R")
+
+performance_data <- load_subject_performance_data()
+subject_data <- load_subject_data()
+
+# Fix outlier in gait variables - two unreasonable values for step time var (>100)
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+
+# Also in navigation performance, two people who did not understand task
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+
+
+```
+
+# Check normality via shapiro_test
+
+The null hypothesis of these tests is that “sample distribution is normal”. If the test is significant, the distribution is non-normal.
+
+```{r}
+
+# Normality testing, via Shapiro-Wilks
+# Function to apply shapiro_test to each variable
+run_shapiro_tests <- function(data, variables) {
+  map(variables, ~ data %>%
+        select(group, value = all_of(.x)) %>%
+        group_by(group) %>%
+        shapiro_test(value) %>%
+        mutate(variable = .x))
+}
+
+# Protocol 2
+variables_to_test <- c(
+  "mean_walking_speed_protocol2_ST_walk",
+  "mean_walking_speed_protocol2_ST_navigation",
+  "mean_stride_length_protocol2_ST_walk",
+  "mean_stride_length_protocol2_ST_navigation",
+  "mean_step_time_protocol2_ST_walk",
+  "mean_step_time_protocol2_ST_navigation",
+  "step_time_variability_protocol2_ST_walk",
+  "step_time_variability_protocol2_ST_navigation",
+  "turns_velocity_protocol_2"
+)
+norm_table_protocol_2 <- bind_rows(run_shapiro_tests(performance_data, variables_to_test))
+
+# Protocol 3
+variables_to_test <- c(
+  "mean_walking_speed_protocol3_ST_navigation",
+  "mean_walking_speed_protocol3_DT_navigation",
+  "mean_stride_length_protocol3_ST_navigation",
+  "mean_stride_length_protocol3_DT_navigation",
+  "mean_step_time_protocol3_ST_navigation",
+  "mean_step_time_protocol3_DT_navigation",
+  "step_time_variability_protocol3_ST_navigation",
+  "step_time_variability_protocol3_DT_navigation",
+  "dt_cost_walk_speed_protocol3",
+  "dt_cost_stride_length_protocol3",
+  "DT_protocol_3_stroop_time",
+  "turns_velocity_protocol_3"
+)
+norm_table_protocol_3 <- bind_rows(run_shapiro_tests(performance_data, variables_to_test))
+
+
+```
+
+## Protocol 2
+
+```{r, results='asis'}
+
+norm_table_protocol_2 |>
+  gt() |>
+  fmt_number(
+    columns = c(statistic, p),
+    decimals = 3,
+    use_seps = FALSE
+  )
+
+```
+
+## Protocol 3
+
+```{r, results='asis'}
+
+norm_table_protocol_3 |>
+  gt() |>
+  fmt_number(
+    columns = c(statistic, p),
+    decimals = 3,
+    use_seps = FALSE
+  )
+
+```
+
+# QQ plots
+
+## Protocol 2
+
+```{r, echo=FALSE, warning=FALSE}
+
+ggqqplot(performance_data, x = "mean_walking_speed_protocol2_ST_walk", facet.by = "group", ylab = "walk_speed_ST")
+ggqqplot(performance_data, x = "mean_walking_speed_protocol2_ST_navigation", facet.by = "group", ylab = "walk_speed_DT")
+ggqqplot(performance_data, x = "mean_stride_length_protocol2_ST_walk", facet.by = "group", ylab = "stride_length_ST")
+ggqqplot(performance_data, x = "mean_stride_length_protocol2_ST_navigation", facet.by = "group", ylab = "stride_length_DT")
+ggqqplot(performance_data, x = "mean_step_time_protocol2_ST_walk", facet.by = "group", ylab = "step_time_ST")
+ggqqplot(performance_data, x = "mean_step_time_protocol2_ST_navigation", facet.by = "group", ylab = "step_time_DT")
+ggqqplot(performance_data, x = "step_time_variability_protocol2_ST_walk", facet.by = "group", ylab = "step_time_var_ST")
+ggqqplot(performance_data, x = "step_time_variability_protocol2_ST_navigation", facet.by = "group", ylab = "step_time_var_DT")
+ggqqplot(performance_data, x = "turns_velocity_protocol_2", facet.by = "group", ylab = "turns_velocity_ST")
+
+```
+
+## Protocol 3
+
+```{r, echo=FALSE, warning=FALSE}
+
+ggqqplot(performance_data, x = "mean_walking_speed_protocol3_ST_navigation", facet.by = "group", ylab = "walk_speed_ST")
+ggqqplot(performance_data, x = "mean_walking_speed_protocol3_DT_navigation", facet.by = "group", ylab = "walk_speed_DT")
+ggqqplot(performance_data, x = "mean_stride_length_protocol3_ST_navigation", facet.by = "group", ylab = "stride_length_ST")
+ggqqplot(performance_data, x = "mean_stride_length_protocol3_DT_navigation", facet.by = "group", ylab = "stride_length_DT")
+ggqqplot(performance_data, x = "mean_step_time_protocol3_ST_navigation", facet.by = "group", ylab = "step_time_ST")
+ggqqplot(performance_data, x = "mean_step_time_protocol3_DT_navigation", facet.by = "group", ylab = "step_time_DT")
+ggqqplot(performance_data, x = "step_time_variability_protocol3_ST_navigation", facet.by = "group", ylab = "step_time_var_ST")
+ggqqplot(performance_data, x = "step_time_variability_protocol3_DT_navigation", facet.by = "group", ylab = "step_time_var_DT")
+ggqqplot(performance_data, x = "dt_cost_walk_speed_protocol3", facet.by = "group", ylab = "dt_cost_speed")
+ggqqplot(performance_data, x = "dt_cost_stride_length_protocol3", facet.by = "group", ylab = "dt_cost_stride_length")
+ggqqplot(performance_data, x = "DT_protocol_3_stroop_time", facet.by = "group", ylab = "dt_cost_stroop_time")
+ggqqplot(performance_data, x = "turns_velocity_protocol_3", facet.by = "group", ylab = "turns_velocity_ST")
+
+```
+
+Non-normal: basically all except navigation walking speed and step time
