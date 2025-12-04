@@ -124,6 +124,8 @@ source = [8 6 5 3 2]';
 detector = [NaN NaN NaN NaN NaN]';
 ROI_PFC = table(source,detector);
 
+% note: S7-D7 / F4-F6 or S1-D1 / F3-F5 also included even with spec < 30
+
 % ba46
 source = [6 8 3 2]';
 detector = [7 7 1 1]';
@@ -158,7 +160,7 @@ job.dummyCoding = 'full';
 job.include_diagnostics = true;
 GroupStats_oa = job.run(SubjStats_oa);
 
-GroupStats_oa.probe.defaultdrawfcn='3D label mesh (frontal)';
+GroupStats_oa.probe.defaultdrawfcn='3D mesh (frontal)';
 GroupStats_oa.probe = GroupStats_oa.probe.SetFiducials_Visibility(false);
 GroupStats_oa.draw('tstat', [-10 10], 'q < 0.05');
 GroupStats_oa.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')

@@ -1,0 +1,578 @@
+---
+title: "fNIRS Parkinson navigation study - notebook"
+bibliography: /Users/alexander.kvist/Zotero/zotero_library.bib
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    embed-resources: true
+    toc: true
+    toc-depth: 3
+    toc-expand: 3
+    theme: flatly
+  
+editor: source
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=10, fig.height=5) 
+
+# load library
+library(lme4)
+library(jtools)
+library(dplyr)
+library(plyr, include.only = c("revalue"))
+library(tidyr)
+library(purrr)
+library(stringr)
+library(forcats)
+library(arsenal)
+
+library(gt)
+library(gtsummary)
+
+```
+
+# Introduction
+
+This document is intended to be used as an "open lab notebook" for an exploratory fNIRS study on navigated walking, analyzing an existing dataset, the Park-MOVE dataset collected between 2021 and 2023 [@franzen2023]. Note that while the data is in a central repository, access to the data is restricted and regulated by data transfer agreements.
+
+The document is built from the project's GitHub repository where all code is also contained: <https://github.com/alkvi/fnirs_navigation_study>
+
+How the dataset used in this study was prepared can be found in: <https://github.com/alkvi/fnirs_dataset_preparation>
+
+## How has the data already been used?
+
+We have a pilot study (<https://doi.org/10.1002/brb3.2948>) where we analysed the first 10 participants and looked at some condition effects. We have a validation study (<https://doi.org/10.1016/j.nicl.2024.103637>) where we looked at condition effects (single-task and dual—task walking) as well as a number of interaction effects. We have a hypothesis-driven study (link) where we evaluated gait automaticity relationships to prefrontal activity during single-task and dual-task walking. This is the first study evaluating navigated walking in the full dataset. 
+
+# Background
+
+Complex walking tasks such as turning while walking and performing cognitive tasks while walking are a common part of everyday life that amplify cognitive-motor impairments in Parkinson’s disease. As many as as many as 45% of steps taken during walking are turning steps [@glaister2007], and studies have found that dual-task walking [@hillel2019; @yamada2020] resembles everyday walking more than lab-based walking assessments focusing only on usual straight walking. This could create an issue for many people with Parkinson's disease, since both turning and dual-tasking are triggers for freezing of gait [@spildooren2019; @spildooren2010], and are also highly associated with falls in PD [@michalowska2005].  Moreover, some studies find a link between falls and impaired dual-task ability in older adults [@lundin-olsson1997]. A lower turn quality has also been linked to an increase in falls in older adults [@leach2018].
+
+While certain deficits in both turning and dual-task ability are known in aging and Parkinson's disease, it is largely unknown what drives performance of navigated walking. Some studies have linked turning speed to overall gait speed [@weston2024]  but other studies [@leach2018] have only looked at behavioral variables. Other studies have found that turning in Parkinson's disease is affected by cognitive load [@spildooren2010], suggesting executive-attentional resources play a role. These resources are also crucial during dual-tasking [@yogev-seligmann2008]. These resources are strongly tied to the prefrontal  area of the brain [@diamond2013], and in particular the dorsolateral prefrontal cortex (DLPFC) and the cingulate cortex [@yogev-seligmann2008].
+
+Defining good performance during walking and turning might not be straightforward. While studies have looked at turn angle and turn duration [@leach2018] as quality markers, people have different turning strategies [@nakamura2025] and priorities during dual-tasking [@maclean2017]. Perhaps someone walks fast but turns slow, or turns fast but does not prioritize a simultaneous cognitive task. One approach to determining types of performance is data-driven clustering such as k-means or hierarchical clustering [@hummel2024]. With many types of data on performance, clustering could reveal patterns of performance.
+
+Thus, the aim of this study is to determine clusters of behavioral performance during navigated walking with and without a dual-task in older adults and people with Parkinson’s disease and characterize these clusters with fNIRS-based neural correlates as well as clinical and demographic correlates.
+
+# Methods
+
+## Experimental procedure
+
+This study uses data from the “ParkMOVE” dataset, collected between 2021 and 2023 [@franzen2023]. Data from two groups were used: older adults and people with PD. The data in the dataset was collected during experiments taking place across two sessions at the uMOVE core facility, Karolinska University Hospital, Solna, Stockholm. During the experimental sessions, clinical tests of balance, disease severity and a neuropsychological test battery were performed, along with fNIRS measurement during a block-based complex walking protocol. Participants performed the fNIRS measurement during one first session, and clinical tests and neuropsychological tests during another with approximately one week between the sessions.
+
+Clinical tests of balance were performed with the Mini-Balance Evaluation Systems Test (Mini-BESTest) (Di Carlo et al. 2016) [@dicarlo2016]. Disease severity for the PD group was assessed with the Movement Disorder Society-sponsored revision of the Unified Parkinson’s Disease Rating Scale (MDS-UPDRS) (Goetz et al. 2008).
+
+The neuropsychological test battery comprised the following tests: The Color-Word Interference Test (CWIT) part III from the Delis-Kaplan Executive Function System (D-KEFS) [@delis2001], Trail Making Test (TMT) part II and IV (from D-KEFS), Verbal Fluency part I-III (from D-KEFS), and Ray Auditory Verbal Learning Test (RAVLT) [@schmidt1996].
+
+Data from two sub-protocols of the full walking protocol (fully described in [@franzen2023] were used. These contained blocks of straight walking (Walking ST), navigated walking (Navigation ST) and navigation while performing an auditory Stroop task (Navigation DT).
+
+Gait parameters and turning parameters were collected using three wireless inertial sensors (Opal, APDM Inc.) positioned over the lumbar and on the feet. Raw data in each block was analyzed in the python the Gaitmap library [@kuderle2024]. Turning parameters were extracted from Mobility Lab.
+
+## Hierachical clustering
+
+Behavioral data (spatiotemporal gait variables and turning variables) were used to create clusters in each group (older adults and people with Parkinson’s disease).
+
+For details, see: (LINK)
+
+## fNIRS analysis
+
+fNIRS data was analyzed in the MATLAB NIRS AnalyzIR toolbox (Santosa et al. 2018) [@santosa2018]. Raw optical density data was converted into oxygenated hemoglobin (HbO2) and deoxygenated hemoglobin (HbR) using the modified Beer-Lambert law (Delpy et al. 1988) with the differential path-length factor (DPF) set to depend on age (Scholkmann et al. 2013) [@scholkmann2013b]. Analyses used a combined form of HbO2 and HbR by calculating the correlation-based signal improvement (CBSI) (Cui, Bray, and Reiss 2010) [@cui2010] signal.
+
+To control for noise and movement artifacts, channels were filtered based on a combined criteria of scalp coupling index and peak spectral power [@hernandez2020].
+
+Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) (Barker, Aarabi, and Huppert 2013) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
+
+Group level analyses used mixed effects models with subject as random intercept.
+
+For details, see: (LINK)
+
+# Results 
+
+## Cluster demographics and performance
+
+In both groups, a generally lower performing cluster and a generally higher performing cluster were formed.
+
+Compared to the higher performing cluster, the lower performing cluster in the OA group was less active (Frändin-Grimby) (Table 1), had a lower walking speed, cadence and turn velocity during all walking conditions, and a higher step time variability during straight walking (Table 3, Table 4).
+
+In the PD group, the lower performing cluster was older, had a lower amount of years of education, and lower scores on the TMT and CWIT (Table 1, Table 2). In terms of performance, the lower performing cluster had a lower walking speed, stride length and turn velocity during all walking conditions, and a higher step time variability during straight walking (Table 3, Table 4). They also had higher dual-task costs on walking speed and stride length, made more mistakes during navigation, and were less accurate in the Stroop task while dual-tasking (Table 4).
+
+```{r}
+
+# Load behavioral data
+source("../scripts/performance_data.R")
+source("../scripts/subject_data.R")
+
+performance_data <- load_subject_performance_data()
+subject_data <- load_subject_data()
+
+# Fix outlier in gait variables - two unreasonable values for step time var (>100)
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+idx <- which.max(performance_data$step_time_variability_protocol2_ST_walk)
+performance_data$step_time_variability_protocol2_ST_walk[idx] <- NA
+
+# Also in navigation performance, two people who did not understand task
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_st)
+performance_data$acc_s3_wrong_st[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_dt)
+performance_data$acc_s3_wrong_dt[idx] <- NA
+idx <- which.max(performance_data$acc_s3_wrong_tot)
+performance_data$acc_s3_wrong_tot[idx] <- NA
+
+# Load cluster results
+# Keep in mind cluster 1 = low performance
+# for the OA group but cluster 1 = high performance for the PD group
+cluster_oa <- read.csv("../data/clusters_oa.csv") 
+cluster_oa <- cluster_oa %>%
+  mutate(cluster = case_when(
+    cluster == 1 ~ "low performing",
+    cluster == 2 ~ "high performing"
+  ))
+
+cluster_pd <- read.csv("../data/clusters_pd.csv") 
+cluster_pd <- cluster_pd %>%
+  mutate(cluster = case_when(
+    cluster == 1 ~ "high performing",
+    cluster == 2 ~ "low performing"
+  ))
+
+clusters <- bind_rows(cluster_oa, cluster_pd)
+
+# Assign cluster function
+performance_data <- performance_data %>% left_join(clusters %>% select(subject, cluster), by = "subject")
+subject_data <- subject_data %>% left_join(clusters %>% select(subject, cluster), by = "subject")
+
+# Separate data by groups to create tables per group
+performance_data_oa <- performance_data %>% filter(group == "OA")
+subject_data_oa <- subject_data %>% filter(group == "OA")
+performance_data_pd <- performance_data %>% filter(group == "PD")
+subject_data_pd <- subject_data %>% filter(group == "PD")
+
+```
+
+```{r}
+#| warning: false
+
+# Create tables
+# This will warn about ties so we get approximate p values
+tab1_oa <-
+  tbl_summary(
+    subject_data_oa,
+    include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man),
+    by = cluster,
+    missing = "no",
+    type = list(frandin_grimby.x ~ "continuous"),
+    digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0)
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+
+tab1_pd <-
+  tbl_summary(
+    subject_data_pd,
+    include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man),
+    by = cluster,
+    missing = "no",
+    type = list(frandin_grimby.x ~ "continuous"),
+    digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0)
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+  
+tab1 <- tbl_merge(
+  tbls = list(tab1_oa, tab1_pd),
+  tab_spanner = c("**OA**", "**PD**")
+) |>
+  modify_caption("**Table 1. Demographics**")
+
+
+tab2_oa <-
+  tbl_summary(
+    subject_data_oa,
+    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret),
+    by = cluster,
+    missing = "no",
+    type = list(c(mb_total, g12_sum) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+
+tab2_pd <-
+  tbl_summary(
+    subject_data_pd,
+    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret),
+    by = cluster,
+    missing = "no",
+    type = list(c(mb_total, g12_sum) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+  
+tab2 <- tbl_merge(
+  tbls = list(tab2_oa, tab2_pd),
+  tab_spanner = c("**OA**", "**PD**")
+) |>
+  modify_caption("**Table 2. Clinical & neuropsychological**")
+
+tab3_oa <-
+  tbl_summary(
+    performance_data_oa,
+    include = c(
+      mean_walking_speed_protocol2_ST_walk,
+      mean_walking_speed_protocol2_ST_navigation,
+      mean_stride_length_protocol2_ST_walk,
+      mean_stride_length_protocol2_ST_navigation,
+      mean_cadence_protocol2_ST_walk,
+      mean_cadence_protocol2_ST_navigation,
+      step_time_variability_protocol2_ST_walk,
+      step_time_variability_protocol2_ST_navigation,
+      turns_velocity_protocol_2,
+      nav_s2_hesitation,
+      nav_s2_wrong
+      ),
+    by = cluster,
+    missing = "no",
+    type = list(c(nav_s2_hesitation, nav_s2_wrong) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+
+tab3_pd <-
+  tbl_summary(
+    performance_data_pd,
+    include = c(
+      mean_walking_speed_protocol2_ST_walk,
+      mean_walking_speed_protocol2_ST_navigation,
+      mean_stride_length_protocol2_ST_walk,
+      mean_stride_length_protocol2_ST_navigation,
+      mean_cadence_protocol2_ST_walk,
+      mean_cadence_protocol2_ST_navigation,
+      step_time_variability_protocol2_ST_walk,
+      step_time_variability_protocol2_ST_navigation,
+      turns_velocity_protocol_2,
+      nav_s2_hesitation,
+      nav_s2_wrong
+      ),
+    by = cluster,
+    missing = "no",
+    type = list(c(nav_s2_hesitation, nav_s2_wrong) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+  
+tab3 <- tbl_merge(
+  tbls = list(tab3_oa, tab3_pd),
+  tab_spanner = c("**OA**", "**PD**")
+) |>
+  modify_caption("**Table 3. Performance variables, protocol 2**")
+
+tab4_oa <-
+  tbl_summary(
+    performance_data_oa,
+    include = c(
+      mean_walking_speed_protocol3_ST_navigation,
+      mean_walking_speed_protocol3_DT_navigation,
+      mean_stride_length_protocol3_ST_navigation,
+      mean_stride_length_protocol3_DT_navigation,
+      mean_cadence_protocol3_ST_navigation,
+      mean_cadence_protocol3_DT_navigation,
+      step_time_variability_protocol3_ST_navigation,
+      step_time_variability_protocol3_DT_navigation,
+      dt_cost_walk_speed_protocol3,
+      dt_cost_stride_length_protocol3,
+      dt_cost_step_time_variability_protocol3,
+      turns_velocity_protocol_3,
+      acc_s3_hesitation_tot,
+      acc_s3_wrong_tot,
+      DT_protocol_3_stroop_acc,
+      DT_protocol_3_stroop_time
+      ),
+    by = cluster,
+    missing = "no",
+    type = list(c(acc_s3_hesitation_tot, 
+                  acc_s3_wrong_tot,
+                  DT_protocol_3_stroop_acc, 
+                  DT_protocol_3_stroop_time) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+
+tab4_pd <-
+  tbl_summary(
+    performance_data_pd,
+    include = c(
+      mean_walking_speed_protocol3_ST_navigation,
+      mean_walking_speed_protocol3_DT_navigation,
+      mean_stride_length_protocol3_ST_navigation,
+      mean_stride_length_protocol3_DT_navigation,
+      mean_cadence_protocol3_ST_navigation,
+      mean_cadence_protocol3_DT_navigation,
+      step_time_variability_protocol3_ST_navigation,
+      step_time_variability_protocol3_DT_navigation,
+      dt_cost_walk_speed_protocol3,
+      dt_cost_stride_length_protocol3,
+      dt_cost_step_time_variability_protocol3,
+      turns_velocity_protocol_3,
+      acc_s3_hesitation_tot,
+      acc_s3_wrong_tot,
+      DT_protocol_3_stroop_acc,
+      DT_protocol_3_stroop_time
+      ),
+    by = cluster,
+    missing = "no",
+    type = list(c(acc_s3_hesitation_tot, 
+                  acc_s3_wrong_tot,
+                  DT_protocol_3_stroop_acc, 
+                  DT_protocol_3_stroop_time) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+  
+tab4 <- tbl_merge(
+  tbls = list(tab4_oa, tab4_pd),
+  tab_spanner = c("**OA**", "**PD**")
+) |>
+  modify_caption("**Table 4. Performance variables, protocol 3**")
+
+# Display the tables in the next block
+
+```
+
+```{r, results='asis'}
+
+tab1
+tab2
+tab3
+tab4
+
+```
+
+## Neuroimaging results
+
+The high performing cluster in the OA group had an increase in activity in BA46 compared to rest during navigation in protocol 2. The low performing cluster did not have any significant increase of activity in BA46.
+
+In the PD group, both clusters had an increase in dlPFC activity during navigation compared to rest in protocol 2, but only the high performing cluster had an increase in dlPFC activity during single- and dual-task navigation during protocol 3.
+
+```{r, results='asis'}
+
+format_results_table <- function(data) {
+  data %>%
+    gt() %>%
+    fmt_number(
+      columns = everything(),
+      decimals = 2
+    ) %>%
+    fmt_number(
+      columns = c(DF),
+      decimals = 0
+    ) %>%
+    fmt(
+      columns = c(p, FDR_p),
+      fns = function(x) {
+        ifelse(x < 0.001, "<.001", sprintf("%.3f", x))
+      }
+    ) %>%
+    tab_style(
+      style = cell_text(weight = "bold"),
+      locations = cells_body(
+        rows = FDR_p < 0.05
+      )
+    )
+}
+
+# Structure the results. Keep in mind cluster 1 = low performance
+# for the OA group but cluster 1 = high performance for the PD group
+# We will also FDR-adjust p values per protocol here
+results_protocol_2 <- read.csv("../data/results_protocol_2.csv")
+results_protocol_2 <- results_protocol_2 %>%
+  filter(ROI == "BA46") %>%
+  select(-AIC, -BIC, -formula, -type, -q) %>%
+  rename(Condition = Contrast) %>%
+  mutate(
+    Condition = if_else(
+      group == "PD",
+      str_replace_all(
+        Condition,
+        c(
+          "cond_" = "",
+          "Navigated_walking" = "Navigation",
+          "Straight_walking" = "Straight walking",
+          ":cluster_1" = " (high performing)",
+          ":cluster_2" = " (low performing)"
+        )
+      ),
+      str_replace_all(
+        Condition,
+        c(
+          "cond_" = "",
+          "Navigated_walking" = "Navigation",
+          "Straight_walking" = "Straight walking",
+          ":cluster_1" = " (low performing)",
+          ":cluster_2" = " (high performing)"
+        )
+      )
+    ),
+    FDR_p = p.adjust(p, method = "BH")
+  ) %>%
+  select(group, everything())
+
+
+results_protocol_3 = read.csv("../data/results_protocol_3.csv")
+results_protocol_3 <- results_protocol_3 %>%
+  filter(ROI == "BA46") %>%
+  select(-AIC, -BIC, -formula, -type, -q) %>%
+  rename(Condition = Contrast) %>%
+  mutate(
+    Condition = if_else(
+      group == "PD",
+      str_replace_all(
+        Condition,
+        c(
+          "cond_Navigation_and_Aud_Stroop" = "Navigation DT",
+          "cond_Navigation" = "Navigation ST",
+          ":cluster_1" = " (high performing)",
+          ":cluster_2" = " (low performing)"
+        )
+      ),
+      str_replace_all(
+        Condition,
+        c(
+          "cond_Navigation_and_Aud_Stroop" = "Navigation DT",
+          "cond_Navigation" = "Navigation ST",
+          ":cluster_1" = " (low performing)",
+          ":cluster_2" = " (high performing)"
+        )
+      )
+    ),
+    FDR_p = p.adjust(p, method = "BH")
+  ) %>%
+  select(group, everything())
+
+
+```
+
+### Protocol 2 OA
+
+```{r, results='asis'}
+
+format_results_table(results_protocol_2 %>% filter(group == "OA"))
+
+```
+
+::: {layout-nrow=2 layout-ncol="3"}
+![ST_walk: Cluster 1](../figures/figures_p2_oa/cond_Straight_walking__cluster_1_cbsi.png)
+
+![ST_walk: Cluster 2](../figures/figures_p2_oa/cond_Straight_walking__cluster_2_cbsi.png)
+
+![ST_walk: Cluster 1 - Cluster 2](../figures/figures_p2_oa/cond_Straight_walking__cluster_1-cond_Straight_walking__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1](../figures/figures_p2_oa/cond_Navigated_walking__cluster_1_cbsi.png)
+
+![ST_nav: Cluster 2](../figures/figures_p2_oa/cond_Navigated_walking__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p2_oa/cond_Navigated_walking__cluster_1-cond_Navigated_walking__cluster_2_cbsi.png)
+
+:::
+
+### Protocol 2 PD
+
+```{r, results='asis'}
+
+format_results_table(results_protocol_2 %>% filter(group == "PD"))
+
+```
+
+::: {layout-nrow=2 layout-ncol="3"}
+![ST_walk: Cluster 1](../figures/figures_p2_pd/cond_Straight_walking__cluster_1_cbsi.png)
+
+![ST_walk: Cluster 2](../figures/figures_p2_pd/cond_Straight_walking__cluster_2_cbsi.png)
+
+![ST_walk: Cluster 1 - Cluster 2](../figures/figures_p2_pd/cond_Straight_walking__cluster_1-cond_Straight_walking__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1](../figures/figures_p2_pd/cond_Navigated_walking__cluster_1_cbsi.png)
+
+![ST_nav: Cluster 2](../figures/figures_p2_pd/cond_Navigated_walking__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p2_pd/cond_Navigated_walking__cluster_1-cond_Navigated_walking__cluster_2_cbsi.png)
+
+:::
+
+### Protocol 3 OA
+
+```{r, results='asis'}
+
+format_results_table(results_protocol_3 %>% filter(group == "OA"))
+
+```
+
+::: {layout-nrow=2 layout-ncol="3"}
+![ST_nav: Cluster 1](../figures/figures_p3_oa/cond_Navigation__cluster_1_cbsi.png)
+
+![ST_nav: Cluster 2](../figures/figures_p3_oa/cond_Navigation__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p3_oa/cond_Navigation__cluster_1-cond_Navigation__cluster_2_cbsi.png)
+
+![DT_nav: Cluster 1](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_1_cbsi.png)
+
+![DT_nav: Cluster 2](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+
+![DT_nav: Cluster 1 - Cluster 2](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_1-cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+
+:::
+
+
+### Protocol 3 PD
+
+```{r, results='asis'}
+
+format_results_table(results_protocol_3 %>% filter(group == "PD"))
+
+```
+
+::: {layout-nrow=2 layout-ncol="3"}
+![ST_nav: Cluster 1](../figures/figures_p3_pd/cond_Navigation__cluster_1_cbsi.png)
+
+![ST_nav: Cluster 2](../figures/figures_p3_pd/cond_Navigation__cluster_2_cbsi.png)
+
+![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p3_pd/cond_Navigation__cluster_1-cond_Navigation__cluster_2_cbsi.png)
+
+![DT_nav: Cluster 1](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_1_cbsi.png)
+
+![DT_nav: Cluster 2](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+
+![DT_nav: Cluster 1 - Cluster 2](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_1-cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+
+:::
+
+
+# Signal quality
+
+To be added.
+
+```{r}
+#| warning: false
+
+  
+```
+
+# Manuscript
+
+Finished manuscript will be linked here when ready.
+
+# References

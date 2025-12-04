@@ -13,11 +13,11 @@ load_subject_data <- function () {
   filter_subjects <- c("NA")
   
   # Identifiers
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_YA.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_YA.csv", sep="")
   identifiers_ya <- read.csv(csv_path)
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_OA.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_OA.csv", sep="")
   identifiers_oa <- read.csv(csv_path)
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_PD.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_PD.csv", sep="")
   identifiers_pd <- read.csv(csv_path)
   
   # Assign group function

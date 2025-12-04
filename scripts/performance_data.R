@@ -18,11 +18,11 @@ load_subject_performance_data <- function () {
   filter_subjects <- c("NA")
   
   # Identifiers
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_YA.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_YA.csv", sep="")
   identifiers_ya <- read.csv(csv_path)
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_OA.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_OA.csv", sep="")
   identifiers_oa <- read.csv(csv_path)
-  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v1/identifiers_PD.csv", sep="")
+  csv_path <- paste("../../Park-MOVE_fnirs_dataset_v2/identifiers_PD.csv", sep="")
   identifiers_pd <- read.csv(csv_path)
   
   # Assign group function
@@ -226,17 +226,24 @@ load_subject_performance_data <- function () {
     mean_step_time_protocol2_ST_navigation = "Step time (navigation), s",
     mean_step_time_protocol3_ST_navigation = "Step time (ST), s",
     mean_step_time_protocol3_DT_navigation = "Step time (DT), s",
+    mean_cadence_protocol2_ST_walk = "Cadence (straight), steps/min",
+    mean_cadence_protocol2_ST_navigation = "Cadence (navigation), steps/min",
+    mean_cadence_protocol3_ST_navigation = "Cadence (ST), steps/min",
+    mean_cadence_protocol3_DT_navigation = "Cadence (DT), steps/min",
     step_time_variability_protocol2_ST_walk = "Step time variability (straight), ms",
     step_time_variability_protocol1_ST_walk = "Step time variability (ST), ms",
     step_time_variability_protocol1_DT_walk = "Step time variability (DT), ms",
     step_time_variability_protocol2_ST_navigation = "Step time variability (navigation), ms",
     step_time_variability_protocol3_ST_navigation = "Step time variability (ST), ms",
     step_time_variability_protocol3_DT_navigation = "Step time variability (DT), ms",
-    turns_velocity_protocol2 = "Turn velocity (peak), deg/s",
-    turns_velocity_protocol3 = "Turn velocity (peak), deg/s",
-    step_time_variability_protocol3_DT_navigation = "Step time variability (DT), ms",
+    turns_velocity_protocol_2 = "Turn velocity (peak), deg/s",
+    turns_velocity_protocol_3 = "Turn velocity (peak), deg/s",
     DT_protocol_3_stroop_acc = "Accuracy (DT), %",
-    DT_protocol_3_stroop_time = "Answer time (DT), s")
+    DT_protocol_3_stroop_time = "Answer time (DT), s",
+    nav_s2_hesitation = "Hesitations (navigation)",
+    nav_s2_wrong = "Mistakes (navigation)",
+    acc_s3_hesitation_tot = "Hesitations (ST)",
+    acc_s3_wrong_tot = "Mistakes (DT)")
 
   return(performance_data)
   
