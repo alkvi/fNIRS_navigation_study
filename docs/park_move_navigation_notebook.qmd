@@ -19,7 +19,6 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.width=10, fig.height=5) 
 
 # load library
-library(lme4)
 library(jtools)
 library(dplyr)
 library(plyr, include.only = c("revalue"))
@@ -62,17 +61,21 @@ Thus, the aim of this study is to determine clusters of behavioral performance d
 
 This study uses data from the “ParkMOVE” dataset, collected between 2021 and 2023 [@franzen2023]. Data from two groups were used: older adults and people with PD. The data in the dataset was collected during experiments taking place across two sessions at the uMOVE core facility, Karolinska University Hospital, Solna, Stockholm. During the experimental sessions, clinical tests of balance, disease severity and a neuropsychological test battery were performed, along with fNIRS measurement during a block-based complex walking protocol. Participants performed the fNIRS measurement during one first session, and clinical tests and neuropsychological tests during another with approximately one week between the sessions.
 
-Clinical tests of balance were performed with the Mini-Balance Evaluation Systems Test (Mini-BESTest) (Di Carlo et al. 2016) [@dicarlo2016]. Disease severity for the PD group was assessed with the Movement Disorder Society-sponsored revision of the Unified Parkinson’s Disease Rating Scale (MDS-UPDRS) (Goetz et al. 2008).
+Clinical tests of balance were performed with the Mini-Balance Evaluation Systems Test (Mini-BESTest) [@dicarlo2016]. Disease severity for the PD group was assessed with the Movement Disorder Society-sponsored revision of the Unified Parkinson’s Disease Rating Scale (MDS-UPDRS) [@goetz2008].
 
 The neuropsychological test battery comprised the following tests: The Color-Word Interference Test (CWIT) part III from the Delis-Kaplan Executive Function System (D-KEFS) [@delis2001], Trail Making Test (TMT) part II and IV (from D-KEFS), Verbal Fluency part I-III (from D-KEFS), and Ray Auditory Verbal Learning Test (RAVLT) [@schmidt1996].
 
-Data from two sub-protocols of the full walking protocol (fully described in [@franzen2023] were used. These contained blocks of straight walking (Walking ST), navigated walking (Navigation ST) and navigation while performing an auditory Stroop task (Navigation DT).
+Data from two sub-protocols (protocol 2 and protocol 3) of the full walking protocol (fully described in [@franzen2023] were used. Protocol 2 contained blocks of straight walking (Walking ST) and navigated walking (Navigation ST). Protocol 3 contained blocks of navigated walking and navigation while performing an auditory Stroop task (Navigation DT).
 
 Gait parameters and turning parameters were collected using three wireless inertial sensors (Opal, APDM Inc.) positioned over the lumbar and on the feet. Raw data in each block was analyzed in the python the Gaitmap library [@kuderle2024]. Turning parameters were extracted from Mobility Lab.
 
 ## Hierachical clustering
 
-Behavioral data (spatiotemporal gait variables and turning variables) were used to create clusters in each group (older adults and people with Parkinson’s disease).
+Behavioral data (spatiotemporal gait variables, turning variables, navigation task accuracy and auditory Stroop performance) were used to create clusters in each group (older adults and people with Parkinson’s disease). Clustering was performed using hierarchical clustering on a distance matrix generated via unsupervised Random Forest, which has several advantages such as accounting for linear and nonlinear variable interactions as well as providing a measure for variable importance [@shi2006]. 
+
+Before clustering, missing variables which were imputed with random forest regression using the 'missForest' package (v1.6.1) in R (v4.5.2) [@rcoreteam2022]. For clustering, sample proximities were obtained from unsupervised random forest with 20 000 trees and converted into distances (1 - proximity) using the'randomForest' package (v4.7.1.2) [@liaw2002]. Then, hierarchical clustering was performed on distances using the 'hclust' function with method 'Ward.D2'. The resulting dendrogram was then cut into _k_ clusters, with _k_ being obtained as the optimal number of clusters via majority vote of 30 different quality indices via the 'NbClust' (v3.0.1) package.
+
+Feature importance was estimated by training a supervised random forest with inferred cluster labels.
 
 For details, see: (LINK)
 
@@ -84,7 +87,7 @@ To control for noise and movement artifacts, channels were filtered based on a c
 
 Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) (Barker, Aarabi, and Huppert 2013) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
 
-Group level analyses used mixed effects models with subject as random intercept.
+Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC).
 
 For details, see: (LINK)
 
