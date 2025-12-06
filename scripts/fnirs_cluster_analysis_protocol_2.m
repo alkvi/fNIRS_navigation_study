@@ -175,7 +175,7 @@ roi_result_oa = nirs.util.roiAverage(GroupStats_oa, ROI_ba_46, "BA46");
 disp(roi_result_oa);
 roi_result_oa_ba46 = AddDiagnostics(roi_result_oa, formula, "OA", "OA_model", "");
 
-c = [1 -1 0 0];
+c = [-1 1 0 0];
 ContrastStats = GroupStats_oa.ttest(c);
 ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
 ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);
@@ -189,7 +189,7 @@ roi_result_oa_contrast_1_ba46 = nirs.util.roiAverage(ContrastStats, ROI_ba_46, "
 roi_result_oa_contrast_1_ba46.group = repmat("OA", size(roi_result_oa_contrast_1_ba46,1),1);
 disp(roi_result_oa_contrast_1_ba46);
 
-c = [0 0 1 -1];
+c = [0 0 -1 1];
 ContrastStats = GroupStats_oa.ttest(c);
 ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
 ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);

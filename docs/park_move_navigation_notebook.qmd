@@ -81,15 +81,19 @@ For details, see: (LINK)
 
 ## fNIRS analysis
 
-fNIRS data was analyzed in the MATLAB NIRS AnalyzIR toolbox (Santosa et al. 2018) [@santosa2018]. Raw optical density data was converted into oxygenated hemoglobin (HbO2) and deoxygenated hemoglobin (HbR) using the modified Beer-Lambert law (Delpy et al. 1988) with the differential path-length factor (DPF) set to depend on age (Scholkmann et al. 2013) [@scholkmann2013b]. Analyses used a combined form of HbO2 and HbR by calculating the correlation-based signal improvement (CBSI) (Cui, Bray, and Reiss 2010) [@cui2010] signal.
+fNIRS data was analyzed in the MATLAB NIRS AnalyzIR toolbox [@santosa2018]. Raw optical density data was converted into oxygenated hemoglobin (HbO2) and deoxygenated hemoglobin (HbR) using the modified Beer-Lambert law [@delpy1988] with the differential path-length factor (DPF) set to depend on age [@scholkmann2013b]. Analyses used a combined form of HbO2 and HbR by calculating the correlation-based signal improvement (CBSI) [@cui2010] signal.
 
 To control for noise and movement artifacts, channels were filtered based on a combined criteria of scalp coupling index and peak spectral power [@hernandez2020].
 
-Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) (Barker, Aarabi, and Huppert 2013) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
+Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
 
-Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC).
+Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC). The ROI p values were adjusted for multiple comparisons using Benjamini-Hochberg False Discovery Rate (FDR) correction.
 
 For details, see: (LINK)
+
+## Statistical analysis
+
+Statistical analysis was performed in R (v4.5.2) [@rcoreteam2022]. Normality of demographic and behavioral data was assessed with the Shapiro-Wilk normality test and visually with q-q plots. Comparison of data between clusters was done using the 'gtsummary' (v2.4.0) package. Comparison was done with the Wilcoxon rank sum test and Pearson's Chi-squared test with alpha level set at 0.05.
 
 # Results 
 
@@ -470,13 +474,17 @@ results_protocol_3 <- results_protocol_3 %>%
 
 ```
 
-### Protocol 2 OA
+### Protocol 2 ROI
+
 
 ```{r, results='asis'}
 
-format_results_table(results_protocol_2 %>% filter(group == "OA"))
+format_results_table(results_protocol_2)
 
 ```
+
+
+### Protocol 2 OA
 
 ::: {layout-nrow=2 layout-ncol="3"}
 ![ST_walk: Cluster 1](../figures/figures_p2_oa/cond_Straight_walking__cluster_1_cbsi.png)
@@ -495,12 +503,6 @@ format_results_table(results_protocol_2 %>% filter(group == "OA"))
 
 ### Protocol 2 PD
 
-```{r, results='asis'}
-
-format_results_table(results_protocol_2 %>% filter(group == "PD"))
-
-```
-
 ::: {layout-nrow=2 layout-ncol="3"}
 ![ST_walk: Cluster 1](../figures/figures_p2_pd/cond_Straight_walking__cluster_1_cbsi.png)
 
@@ -516,13 +518,17 @@ format_results_table(results_protocol_2 %>% filter(group == "PD"))
 
 :::
 
-### Protocol 3 OA
+### Protocol 3 ROI
+
 
 ```{r, results='asis'}
 
-format_results_table(results_protocol_3 %>% filter(group == "OA"))
+format_results_table(results_protocol_3)
 
 ```
+
+
+### Protocol 3 OA
 
 ::: {layout-nrow=2 layout-ncol="3"}
 ![ST_nav: Cluster 1](../figures/figures_p3_oa/cond_Navigation__cluster_1_cbsi.png)
@@ -541,12 +547,6 @@ format_results_table(results_protocol_3 %>% filter(group == "OA"))
 
 
 ### Protocol 3 PD
-
-```{r, results='asis'}
-
-format_results_table(results_protocol_3 %>% filter(group == "PD"))
-
-```
 
 ::: {layout-nrow=2 layout-ncol="3"}
 ![ST_nav: Cluster 1](../figures/figures_p3_pd/cond_Navigation__cluster_1_cbsi.png)
@@ -573,6 +573,56 @@ To be added.
 
   
 ```
+
+# Disease severity
+
+```{r}
+#| warning: false
+
+
+updrs_file <- paste("../../Park-MOVE_fnirs_dataset_v2/REDcap_data/UPDRS_data.csv", sep="")
+measurement_date_file <- paste("../../Park-MOVE_fnirs_dataset_v2/measurement_dates.csv", sep="")
+
+updrs_data <- read.csv(updrs_file)
+updrs_data$updrs_3_total <- rowSums(updrs_data[, 35:66], na.rm = TRUE)
+updrs_data <- updrs_data[c("id_nummer", "updrs_3_total")]
+names(updrs_data)[names(updrs_data) == 'id_nummer'] <- 'subject'
+
+# Get disease duration via diagnosis date and measurement date
+diagnosis_data <- subject_data_pd[c("subject", "crf_pd_year_phone")]
+measurement_dates <- read.csv(measurement_date_file, sep=";")
+measurement_dates$measurement_date_t1 <- as.Date(measurement_dates$measurement_date_t1, format = "%Y-%m-%d")
+measurement_dates$year <- format(measurement_dates$measurement_date_t1, "%Y")
+measurement_dates <- measurement_dates[c("subject", "year")]
+measurement_dates <- merge(diagnosis_data, measurement_dates, by = "subject", all = TRUE)
+measurement_dates$disease_dur <- as.numeric(measurement_dates$year) - as.numeric(measurement_dates$crf_pd_year_phone)
+measurement_dates <- measurement_dates[c("subject", "disease_dur")]
+
+# Add measurment dates
+subject_data_pd <- merge(subject_data_pd, measurement_dates, by = "subject", all = FALSE)
+subject_data_pd <- merge(subject_data_pd, updrs_data, by = "subject", all = FALSE)
+
+tab5_pd <-
+  tbl_summary(
+    subject_data_pd,
+    include = c(
+      led_total,
+      updrs_3_total,
+      disease_dur,
+      ),
+    by = cluster,
+    missing = "no",
+    type = list(c(disease_dur, 
+                  updrs_3_total) ~ "continuous"),
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(label = "**Variable**")
+
+tab5_pd
+
+```
+
 
 # Manuscript
 
