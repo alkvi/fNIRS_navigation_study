@@ -83,11 +83,11 @@ For details, see: (LINK)
 
 fNIRS data was analyzed in the MATLAB NIRS AnalyzIR toolbox [@santosa2018]. Raw optical density data was converted into oxygenated hemoglobin (HbO2) and deoxygenated hemoglobin (HbR) using the modified Beer-Lambert law [@delpy1988] with the differential path-length factor (DPF) set to depend on age [@scholkmann2013b]. Analyses used a combined form of HbO2 and HbR by calculating the correlation-based signal improvement (CBSI) [@cui2010] signal.
 
-To control for noise and movement artifacts, channels were filtered based on a combined criteria of scalp coupling index and peak spectral power [@hernandez2020].
+To control for noise and movement artifacts, channels were filtered based on a combined criteria of scalp coupling index (SCI) and peak spectral power (PSP) [@hernandez2020], with a bad channel detected as SCI < 0.7 or PSP < 0.1.
 
 Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
 
-Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC). The ROI p values were adjusted for multiple comparisons using Benjamini-Hochberg False Discovery Rate (FDR) correction.
+Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC). The ROI p values were adjusted for multiple comparisons in each protocol using Benjamini-Hochberg False Discovery Rate (FDR) correction.
 
 For details, see: (LINK)
 
