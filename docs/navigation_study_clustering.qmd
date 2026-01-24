@@ -215,11 +215,37 @@ check_pcs <- function (df) {
   
   pcadata <- prcomp(df,  scale = TRUE)
 
-  # Variable contribution
-  p <- fviz_cos2(pcadata, choice = "var", axes = 1, xtickslab.rt = 90)
-  print(p)
-  p <- fviz_cos2(pcadata, choice = "var", axes = 2, xtickslab.rt = 90)
-  print(p)
+
+library(factoextra)
+library(ggplot2)
+
+# Larger text + compact layout
+p <- fviz_cos2(
+  pcadata, choice = "var", axes = 1, xtickslab.rt = 0, top = 3
+) +
+  theme_minimal(base_size = 18) +       # Increase text size
+  theme(
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 16),
+    axis.title = element_text(size = 18),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 18)
+  )
+print(p)
+
+p <- fviz_cos2(
+  pcadata, choice = "var", axes = 2, xtickslab.rt = 0, top = 3
+) +
+  theme_minimal(base_size = 18) +
+  theme(
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 16),
+    axis.title = element_text(size = 18),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 18)
+  )
+print(p)
+
   
 }
 
@@ -406,7 +432,14 @@ plot_vars <- function(data, x_var, y_var) {
     labs(x = x_var, y = y_var, title = "Plot RF") +
     theme_minimal() +
     scale_color_brewer(palette = "Set1") +
-    scale_fill_brewer(palette = "Set1")
+    scale_fill_brewer(palette = "Set1") +
+    theme(
+      axis.title.x = element_text(size = 18),   # ⬅ bigger x label
+      axis.title.y = element_text(size = 18),   # ⬅ bigger y label
+      axis.text.x  = element_text(size = 14),   # optional: bigger tick labels
+      axis.text.y  = element_text(size = 14)    # optional
+    )
+
 
   print(gg_point)
 }
@@ -420,6 +453,8 @@ plot_vars(performance_data_oa, "mean_stance_time_ST_navigation", "mean_stride_le
 plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "turns_velocity_protocol_2")
 plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "mean_stride_length_ST_navigation")
 plot_vars(performance_data_oa, "mean_walking_speed_ST_navigation", "mean_cadence_ST_navigation")
+plot_vars(performance_data_oa, "mean_stride_length_ST_navigation", "turns_velocity_protocol_3")
+plot_vars(performance_data_oa, "mean_stride_length_ST_navigation", "dt_cost_stride_length_protocol3")
 
 ```
 
@@ -435,6 +470,8 @@ plot_vars(performance_data_pd, "mean_stance_time_ST_navigation", "mean_stride_le
 plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "turns_velocity_protocol_2")
 plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "mean_stride_length_ST_navigation")
 plot_vars(performance_data_pd, "mean_walking_speed_ST_navigation", "mean_cadence_ST_navigation")
+plot_vars(performance_data_pd, "mean_stride_length_ST_navigation", "turns_velocity_protocol_3")
+plot_vars(performance_data_pd, "mean_stride_length_ST_navigation", "dt_cost_stride_length_protocol3")
 
 ```
 
