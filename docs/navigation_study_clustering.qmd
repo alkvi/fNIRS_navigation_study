@@ -28,6 +28,7 @@ library(patchwork)
 
 library(gt)
 library(gtExtras)
+library(gtsummary)
 
 library(randomForest)
 library(factoextra)
@@ -35,7 +36,9 @@ library(gridExtra)
 library(missForest)
 library(cluster)
 library(NbClust)
+library(fpc)
 
+# Starting seed
 set.seed(123)
 
 ```
@@ -207,46 +210,47 @@ run_clustering_rf <- function (df, k) {
   importance(rf_supervised)
   varImpPlot(rf_supervised)
   
-  return(cluster)
+  return(
+    list(
+        rf = rf,
+        d = d,
+        hc = hc,
+        cluster = cluster
+      )
+  )
 
 }
 
 check_pcs <- function (df) {
   
   pcadata <- prcomp(df,  scale = TRUE)
-
-
-library(factoextra)
-library(ggplot2)
-
-# Larger text + compact layout
-p <- fviz_cos2(
-  pcadata, choice = "var", axes = 1, xtickslab.rt = 0, top = 3
-) +
-  theme_minimal(base_size = 18) +       # Increase text size
-  theme(
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 16),
-    axis.title = element_text(size = 18),
-    legend.text = element_text(size = 16),
-    legend.title = element_text(size = 18)
-  )
-print(p)
-
-p <- fviz_cos2(
-  pcadata, choice = "var", axes = 2, xtickslab.rt = 0, top = 3
-) +
-  theme_minimal(base_size = 18) +
-  theme(
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 16),
-    axis.title = element_text(size = 18),
-    legend.text = element_text(size = 16),
-    legend.title = element_text(size = 18)
-  )
-print(p)
-
   
+  p <- fviz_cos2(
+      pcadata, choice = "var", axes = 1, xtickslab.rt = 0, top = 3
+    ) +
+    theme_minimal(base_size = 18) +       # Increase text size
+    theme(
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 16),
+      axis.title = element_text(size = 18),
+      legend.text = element_text(size = 16),
+      legend.title = element_text(size = 18)
+    )
+  print(p)
+  
+  p <- fviz_cos2(
+      pcadata, choice = "var", axes = 2, xtickslab.rt = 0, top = 3
+    ) +
+    theme_minimal(base_size = 18) +
+    theme(
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 16),
+      axis.title = element_text(size = 18),
+      legend.text = element_text(size = 16),
+      legend.title = element_text(size = 18)
+    )
+  print(p)
+
 }
 
 set_subject_rownames <- function (df) {
@@ -267,6 +271,8 @@ For example, we can visualize the silhouette score.
 
 Or, we can determine the optimal number of clusters with [NbClust](https://cran.r-project.org/web/packages/NbClust/index.html) which tests 30 different types of cluster statistics. Then it does majority voting on that.
 
+Note that not all metrics are based on distance matrix that we provide via RF. According to the [NbClust documentation](https://cran.r-project.org/web/packages/NbClust/NbClust.pdf), only these are directly based on dissimilarity: frey, mcclain, cindex, silhouette and dunn. However, other metrics can provide a useful indication of patterns in the data as well.
+
 In either case, it looks like we get 2 clusters.
 
 ```{r}
@@ -282,13 +288,19 @@ df_oa_norm <- df_oa_imputed %>%
 # Optimal number
 fviz_nbclust(df_oa_imputed, hcut, method = "silhouette")
 
+# Prepare a dissimilarity matrix for NbClust
+rf <- randomForest(x = df_oa_imputed, y = NULL, ntree = 20000, proximity = TRUE, oob.prox = TRUE)
+d <- as.dist(1 - rf$proximity)
+
 # Capture all output from NbClust
 output <- capture.output({
   res_nbclust <- NbClust(df_oa_imputed,
-                         distance = "euclidean",
+                         diss=d,
+                         distance = NULL,
                          min.nc = 2, max.nc = 10,
                          method = "ward.D2", index = "all")
 })
+
 
 # Filter lines that match a pattern
 allowed_lines <- grep("the best number of clusters", output, value = TRUE)
@@ -308,8 +320,12 @@ Also which variables contribute to separating the clusters.
 
 ```{r}
 
+# For reproducible cluster despite other changes in pipeline
+set.seed(123)
+
 # Get clusters
-cluster_rf_oa <- run_clustering_rf(df_oa_imputed, 2)
+res_cluster_oa <- run_clustering_rf(df_oa_imputed, 2)
+cluster_rf_oa <- res_cluster_oa$cluster
 
 ```
 
@@ -359,10 +375,15 @@ df_pd_norm <- df_pd_imputed %>%
 # Optimal number
 fviz_nbclust(df_pd_imputed, hcut, method = "silhouette")
 
+# Prepare a dissimilarity matrix for NbClust
+rf <- randomForest(x = df_pd_imputed, y = NULL, ntree = 20000, proximity = TRUE, oob.prox = TRUE)
+d <- as.dist(1 - rf$proximity)
+
 # Capture all output from NbClust
 output <- capture.output({
-  res_nbclust <- NbClust(df_oa_imputed,
-                         distance = "euclidean",
+  res_nbclust <- NbClust(df_pd_imputed,
+                         diss = d,
+                         distance = NULL,
                          min.nc = 2, max.nc = 10,
                          method = "ward.D2", index = "all")
 })
@@ -379,8 +400,12 @@ cat(paste(allowed_lines, collapse = "\n"), "\n")
 
 ```{r}
 
+# For reproducible cluster despite other changes in pipeline
+set.seed(123)
+
 # Get clusters
-cluster_rf_pd <- run_clustering_rf(df_pd_imputed, 2)
+res_cluster_pd <- run_clustering_rf(df_pd_imputed, 2)
+cluster_rf_pd <- res_cluster_pd$cluster
 
 ```
 
@@ -411,6 +436,66 @@ ggplot(pcs, aes(x = PC1, y = PC2, color = Cluster, label = Subject)) +
   scale_fill_brewer(palette = "Set1")
 
 check_pcs(df_pd_norm)
+
+```
+
+# Cluster stability
+
+Evaluating cluster stability via Jaccard similarity values, we see that the clusters are moderately stable: one cluster in each group is valid and stable (0.76, 0.80), while one is less stable while still indicating a pattern in the data (0.61, 0.68).
+
+From the [clusterboot documentation](https://search.r-project.org/CRAN/refmans/fpc/html/clusterboot.html):
+
+> Generally, a valid, stable cluster should yield a mean Jaccard similarity value of 0.75 or more. Between 0.6 and 0.75, clusters may be considered as indicating patterns in the data, but which points exactly should belong to these clusters is highly doubtful. Below average Jaccard values of 0.6, clusters should not be trusted
+
+These values are based on [@hennig2007].
+
+We can see that it is the larger cluster that is the more stable cluster in each group.
+
+You can also see the moderate stability by re-running the analysis with different seeds. The core patterns are generally the same when evaluating resulting performance and demographics in the clusters but exact cluster assignment will vary somewhat.
+
+```{r}
+
+cb <- clusterboot(
+  res_cluster_oa$d,
+  B = 100,
+  distances=TRUE,
+  clustermethod = disthclustCBI,
+  method = "ward.D2",
+  k = 2,
+  seed=123,
+  showplots=FALSE,
+  count=FALSE
+)
+
+print(cb, statistics = c("mean", "dissolution", "recovery"))
+
+# Ensure we get the same resulting clusters
+cat(
+  "Which partitions do we get:\n",
+  capture.output(table(cb$result$partition)),
+  sep = "\n"
+)
+
+cb <- clusterboot(
+  res_cluster_pd$d,
+  B = 100,
+  distances=TRUE,
+  clustermethod = disthclustCBI,
+  method = "ward.D2",
+  k = 2,
+  seed=123,
+  showplots=FALSE,
+  count=FALSE
+)
+
+print(cb, statistics = c("mean", "dissolution", "recovery"))
+
+# Ensure we get the same resulting clusters
+cat(
+  "Which partitions do we get:\n",
+  capture.output(table(cb$result$partition)),
+  sep = "\n"
+)
 
 ```
 

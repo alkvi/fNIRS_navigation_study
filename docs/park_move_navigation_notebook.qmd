@@ -35,7 +35,7 @@ library(gtsummary)
 
 # Introduction
 
-This document is intended to be used as an "open lab notebook" for an exploratory fNIRS study on navigated walking, analyzing an existing dataset, the Park-MOVE dataset collected between 2021 and 2023 [@franzen2023]. Note that while the data is in a central repository, access to the data is restricted and regulated by data transfer agreements.
+This document is intended to be used as an "open lab notebook" for an exploratory, data-driven fNIRS study on navigated walking, analyzing an existing dataset, the Park-MOVE dataset collected between 2021 and 2023 [@franzen2023]. Note that while the data is in a central repository, access to the data is restricted and regulated by data transfer agreements.
 
 The document is built from the project's GitHub repository where all code is also contained: <https://github.com/alkvi/fnirs_navigation_study>
 
@@ -43,67 +43,47 @@ How the dataset used in this study was prepared can be found in: <https://github
 
 ## How has the data already been used?
 
-We have a pilot study (<https://doi.org/10.1002/brb3.2948>) where we analysed the first 10 participants and looked at some condition effects. We have a validation study (<https://doi.org/10.1016/j.nicl.2024.103637>) where we looked at condition effects (single-task and dual—task walking) as well as a number of interaction effects. We have a hypothesis-driven study (link) where we evaluated gait automaticity relationships to prefrontal activity during single-task and dual-task walking. This is the first study evaluating navigated walking in the full dataset. 
-
-# Background
-
-Complex walking tasks such as turning while walking and performing cognitive tasks while walking are a common part of everyday life that amplify cognitive-motor impairments in Parkinson’s disease. As many as as many as 45% of steps taken during walking are turning steps [@glaister2007], and studies have found that dual-task walking [@hillel2019; @yamada2020] resembles everyday walking more than lab-based walking assessments focusing only on usual straight walking. This could create an issue for many people with Parkinson's disease, since both turning and dual-tasking are triggers for freezing of gait [@spildooren2019; @spildooren2010], and are also highly associated with falls in PD [@michalowska2005].  Moreover, some studies find a link between falls and impaired dual-task ability in older adults [@lundin-olsson1997]. A lower turn quality has also been linked to an increase in falls in older adults [@leach2018].
-
-While certain deficits in both turning and dual-task ability are known in aging and Parkinson's disease, it is largely unknown what drives performance of navigated walking. Some studies have linked turning speed to overall gait speed [@weston2024]  but other studies [@leach2018] have only looked at behavioral variables. Other studies have found that turning in Parkinson's disease is affected by cognitive load [@spildooren2010], suggesting executive-attentional resources play a role. These resources are also crucial during dual-tasking [@yogev-seligmann2008]. These resources are strongly tied to the prefrontal  area of the brain [@diamond2013], and in particular the dorsolateral prefrontal cortex (DLPFC) and the cingulate cortex [@yogev-seligmann2008].
-
-Defining good performance during walking and turning might not be straightforward. While studies have looked at turn angle and turn duration [@leach2018] as quality markers, people have different turning strategies [@nakamura2025] and priorities during dual-tasking [@maclean2017]. Perhaps someone walks fast but turns slow, or turns fast but does not prioritize a simultaneous cognitive task. One approach to determining types of performance is data-driven clustering such as k-means or hierarchical clustering [@hummel2024]. With many types of data on performance, clustering could reveal patterns of performance.
-
-Thus, the aim of this study is to determine clusters of behavioral performance during navigated walking with and without a dual-task in older adults and people with Parkinson’s disease and characterize these clusters with fNIRS-based neural correlates as well as clinical and demographic correlates.
+We have a pilot study (<https://doi.org/10.1002/brb3.2948>) where we analysed the first 10 participants and looked at some condition effects. We have a validation study (<https://doi.org/10.1016/j.nicl.2024.103637>) where we looked at condition effects (single-task and dual—task walking) as well as a number of interaction effects. We have a hypothesis-driven study (<https://doi.org/10.1186/s12984-025-01864-w>) where we evaluated gait automaticity relationships to prefrontal activity during single-task and dual-task walking. This is the first study evaluating navigated walking in the full dataset. 
 
 # Methods
 
-## Experimental procedure
+The idea of the study is as follows:
 
-This study uses data from the “ParkMOVE” dataset, collected between 2021 and 2023 [@franzen2023]. Data from two groups were used: older adults and people with PD. The data in the dataset was collected during experiments taking place across two sessions at the uMOVE core facility, Karolinska University Hospital, Solna, Stockholm. During the experimental sessions, clinical tests of balance, disease severity and a neuropsychological test battery were performed, along with fNIRS measurement during a block-based complex walking protocol. Participants performed the fNIRS measurement during one first session, and clinical tests and neuropsychological tests during another with approximately one week between the sessions.
-
-Clinical tests of balance were performed with the Mini-Balance Evaluation Systems Test (Mini-BESTest) [@dicarlo2016]. Disease severity for the PD group was assessed with the Movement Disorder Society-sponsored revision of the Unified Parkinson’s Disease Rating Scale (MDS-UPDRS) [@goetz2008].
-
-The neuropsychological test battery comprised the following tests: The Color-Word Interference Test (CWIT) part III from the Delis-Kaplan Executive Function System (D-KEFS) [@delis2001], Trail Making Test (TMT) part II and IV (from D-KEFS), Verbal Fluency part I-III (from D-KEFS), and Ray Auditory Verbal Learning Test (RAVLT) [@schmidt1996].
-
-Data from two sub-protocols (protocol 2 and protocol 3) of the full walking protocol (fully described in [@franzen2023] were used. Protocol 2 contained blocks of straight walking (Walking ST) and navigated walking (Navigation ST). Protocol 3 contained blocks of navigated walking and navigation while performing an auditory Stroop task (Navigation DT).
-
-Gait parameters and turning parameters were collected using three wireless inertial sensors (Opal, APDM Inc.) positioned over the lumbar and on the feet. Raw data in each block was analyzed in the python the Gaitmap library [@kuderle2024]. Turning parameters were extracted from Mobility Lab.
+- Use clustering on behavioral variables to find patterns of performance
+- Evaluate demographics and clinical variables in and between clusters
+- Evaluate neuroimaging data in clusters and contrast between clusters
 
 ## Hierachical clustering
 
-Behavioral data (spatiotemporal gait variables, turning variables, navigation task accuracy and auditory Stroop performance) were used to create clusters in each group (older adults and people with Parkinson’s disease). Clustering was performed using hierarchical clustering on a distance matrix generated via unsupervised Random Forest, which has several advantages such as accounting for linear and nonlinear variable interactions as well as providing a measure for variable importance [@shi2006]. 
-
-Before clustering, missing variables which were imputed with random forest regression using the 'missForest' package (v1.6.1) in R (v4.5.2) [@rcoreteam2022]. For clustering, sample proximities were obtained from unsupervised random forest with 20 000 trees and converted into distances (1 - proximity) using the'randomForest' package (v4.7.1.2) [@liaw2002]. Then, hierarchical clustering was performed on distances using the 'hclust' function with method 'Ward.D2'. The resulting dendrogram was then cut into _k_ clusters, with _k_ being obtained as the optimal number of clusters via majority vote of 30 different quality indices via the 'NbClust' (v3.0.1) package.
-
-Feature importance was estimated by training a supervised random forest with inferred cluster labels.
+Clustering was performed on performance data: gait variables, turning variables, task accuracy, task response time. Hierarchical clustering on distance matrices generated via unsupervised Random Forest was used. Imputation before clustering was also done. Number of clusters determined via majority voting through the NbClust package. Feature importance via supervised random forest on inferred cluster labels.
 
 For details, see: (LINK)
 
 ## fNIRS analysis
 
-fNIRS data was analyzed in the MATLAB NIRS AnalyzIR toolbox [@santosa2018]. Raw optical density data was converted into oxygenated hemoglobin (HbO2) and deoxygenated hemoglobin (HbR) using the modified Beer-Lambert law [@delpy1988] with the differential path-length factor (DPF) set to depend on age [@scholkmann2013b]. Analyses used a combined form of HbO2 and HbR by calculating the correlation-based signal improvement (CBSI) [@cui2010] signal.
+System used is an 8x8 NIRSport2, with a montage over the prefrontal cortex. Sampling rate 10 Hz.
 
-To control for noise and movement artifacts, channels were filtered based on a combined criteria of scalp coupling index (SCI) and peak spectral power (PSP) [@hernandez2020], with a bad channel detected as SCI < 0.7 or PSP < 0.1.
+The fNIRS analysis is a fairly straightforward GLM analysis in the MATLAB NIRS AnalyzIR toolbox [@santosa2018].
 
-Subject level analysis used a general linear model (GLM) with pre-whitening and autoregression (AR-IRLS) [@barker2013] to reduce systemic physiology and motion-induced artifacts. Short-separation channels were used as regressors to further filter out superficial noise. A canonical hemodynamic response function (HRF) was assumed.
+Differential path-length factor (DPF) is set to depend on age [@scholkmann2013b]. HbO2 and HbR are combined by calculating the correlation-based signal improvement (CBSI) [@cui2010] signal. Channels are filtered based on a combined criteria of scalp coupling index (SCI) and peak spectral power (PSP) [@hernandez2020], with a bad channel detected as SCI < 0.7 or PSP < 0.1.
 
-Group level analyses used mixed effects models with subject as random intercept. A region of interest (ROI) analysis was performed on channels covering Brodmann Area 46 in the dorsolateral prefrontal cortex (dlPFC). The ROI p values were adjusted for multiple comparisons in each protocol using Benjamini-Hochberg False Discovery Rate (FDR) correction.
+Subject level analysis is done with GLM + pre-whitening and autoregression (AR-IRLS) [@barker2013], with short-separation regressors.
+
+Group level analyses is done with mixed effects models with subject as random intercept.
 
 For details, see: (LINK)
 
-## Statistical analysis
-
-Statistical analysis was performed in R (v4.5.2) [@rcoreteam2022]. Normality of demographic and behavioral data was assessed with the Shapiro-Wilk normality test and visually with q-q plots. Comparison of data between clusters was done using the 'gtsummary' (v2.4.0) package. Comparison was done with the Wilcoxon rank sum test and Pearson's Chi-squared test with alpha level set at 0.05.
-
 # Results 
 
+## Signal quality
+
+The combined criteria on SCI and PSP marks a substantial amount of channels as bad.
+
+From 20-30% of participants who had channels below criteria in the lower channels (around BA46), to up to 40% in the higher channels (around BA9).
+
+![Channel-level signal quality in terms of % of participants in which channel was marked as below quality criteria](../figures_quality/bad_channels_combined_percent_07_01.JPG)
+
 ## Cluster demographics and performance
-
-In both groups, a generally lower performing cluster and a generally higher performing cluster were formed.
-
-Compared to the higher performing cluster, the lower performing cluster in the OA group was less active (Frändin-Grimby) (Table 1), had a lower walking speed, cadence and turn velocity during all walking conditions, and a higher step time variability during straight walking (Table 3, Table 4).
-
-In the PD group, the lower performing cluster was older, had a lower amount of years of education, and lower scores on the TMT and CWIT (Table 1, Table 2). In terms of performance, the lower performing cluster had a lower walking speed, stride length and turn velocity during all walking conditions, and a higher step time variability during straight walking (Table 3, Table 4). They also had higher dual-task costs on walking speed and stride length, made more mistakes during navigation, and were less accurate in the Stroop task while dual-tasking (Table 4).
 
 ```{r}
 
@@ -135,8 +115,8 @@ idx <- which.max(performance_data$acc_s3_wrong_tot)
 performance_data$acc_s3_wrong_tot[idx] <- NA
 
 # Load cluster results
-# Keep in mind cluster 1 = low performance
-# for the OA group but cluster 1 = high performance for the PD group
+# Keep in mind cluster 1 = low performance for the OA group 
+# but cluster 1 = high performance for the PD group
 cluster_oa <- read.csv("../data/clusters_oa.csv") 
 cluster_oa <- cluster_oa %>%
   mutate(cluster = case_when(
@@ -157,6 +137,13 @@ clusters <- bind_rows(cluster_oa, cluster_pd)
 performance_data <- performance_data %>% left_join(clusters %>% select(subject, cluster), by = "subject")
 subject_data <- subject_data %>% left_join(clusters %>% select(subject, cluster), by = "subject")
 
+# Separate out YA
+performance_data <- performance_data %>% filter(group != "YA")
+subject_data <- subject_data %>% filter(group != "YA")
+
+performance_data$group <- droplevels(performance_data$group)
+subject_data$group <- droplevels(subject_data$group)
+
 # Separate data by groups to create tables per group
 performance_data_oa <- performance_data %>% filter(group == "OA")
 subject_data_oa <- subject_data %>% filter(group == "OA")
@@ -164,6 +151,86 @@ performance_data_pd <- performance_data %>% filter(group == "PD")
 subject_data_pd <- subject_data %>% filter(group == "PD")
 
 ```
+
+## Baseline performance 
+
+```{r}
+#| warning: false
+
+# Compare baseline demographics and performance.
+
+tab1_demo <-
+  tbl_summary(
+    subject_data,
+    include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man,
+                mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret, vf_sum),
+    by = group,
+    missing = "no",
+    type = list(frandin_grimby.x ~ "continuous"),
+    digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0),
+  ) |> 
+  add_ci() |>
+  add_p() |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
+  modify_header(
+    label ~ "**Variable**",
+  )
+
+tab1_demo
+
+# We want to compare the performance variables we use for clustering.
+# Some values are missing, so calculate how many and append to table.
+# These are the ones that are imputed in the clustering.
+
+tab1_performance <-
+  tbl_summary(
+    performance_data,
+    include = c(
+      mean_walking_speed_protocol2_ST_walk,
+      mean_walking_speed_protocol2_ST_navigation,
+      mean_stride_length_protocol2_ST_walk,
+      mean_stride_length_protocol2_ST_navigation,
+      mean_cadence_protocol2_ST_walk,
+      mean_cadence_protocol2_ST_navigation,
+      step_time_variability_protocol2_ST_walk,
+      step_time_variability_protocol2_ST_navigation,
+      turns_velocity_protocol_2,
+      nav_s2_hesitation,
+      nav_s2_wrong,
+      mean_walking_speed_protocol3_ST_navigation,
+      mean_walking_speed_protocol3_DT_navigation,
+      mean_stride_length_protocol3_ST_navigation,
+      mean_stride_length_protocol3_DT_navigation,
+      mean_cadence_protocol3_ST_navigation,
+      mean_cadence_protocol3_DT_navigation,
+      step_time_variability_protocol3_ST_navigation,
+      step_time_variability_protocol3_DT_navigation,
+      dt_cost_walk_speed_protocol3,
+      dt_cost_stride_length_protocol3,
+      dt_cost_step_time_variability_protocol3,
+      turns_velocity_protocol_3,
+      acc_s3_hesitation_tot,
+      acc_s3_wrong_tot,
+      DT_protocol_3_stroop_acc,
+      DT_protocol_3_stroop_time),
+    by = group,
+    missing = "no",
+    type = list(c(nav_s2_hesitation, nav_s2_wrong, acc_s3_hesitation_tot, acc_s3_wrong_tot) ~ "continuous")
+  ) |> 
+  add_p() |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
+  add_n(
+    statistic = "{p_miss}",
+    col_label = "**Missing n (%)**",
+  )
+
+tab1_performance 
+
+```
+
+## Cluster demographics
 
 ```{r}
 #| warning: false
@@ -206,7 +273,7 @@ tab1 <- tbl_merge(
 tab2_oa <-
   tbl_summary(
     subject_data_oa,
-    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret),
+    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret, vf_sum),
     by = cluster,
     missing = "no",
     type = list(c(mb_total, g12_sum) ~ "continuous"),
@@ -218,7 +285,7 @@ tab2_oa <-
 tab2_pd <-
   tbl_summary(
     subject_data_pd,
-    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret),
+    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret, vf_sum),
     by = cluster,
     missing = "no",
     type = list(c(mb_total, g12_sum) ~ "continuous"),
@@ -562,17 +629,6 @@ format_results_table(results_protocol_3)
 ![DT_nav: Cluster 1 - Cluster 2](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_1-cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
 
 :::
-
-
-# Signal quality
-
-To be added.
-
-```{r}
-#| warning: false
-
-  
-```
 
 # Disease severity
 

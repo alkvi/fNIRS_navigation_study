@@ -53,10 +53,6 @@ load_subject_data <- function () {
   all_subject_data <- merge(demo_data, redcap_data, by = "subject", all = TRUE)
   all_subject_data <- assign_group(all_subject_data, identifiers_ya, identifiers_oa, identifiers_pd)
   
-  # Filter out YA
-  all_subject_data <- all_subject_data[!all_subject_data$group == 'YA', ]
-  all_subject_data$group <- factor(all_subject_data$group, levels=c('OA', 'PD'))
-  
   # Cleaner names
   labels(all_subject_data)  <- c(
     age = "Age, yrs", 
@@ -72,7 +68,8 @@ load_subject_data <- function () {
     tmt_4 = "TMT4, s",
     tmt_4_tmt_2_contrast = "TMT4 - TMT2, s",
     cwit_3 = "CWIT3, s",
-    ravlt_ret = "RAVLT retention, words")
+    ravlt_ret = "RAVLT retention, words",
+    vf_sum = "Verbal fluency, total words")
 
   return(all_subject_data)
   

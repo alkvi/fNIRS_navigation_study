@@ -197,9 +197,6 @@ load_subject_performance_data <- function () {
   # Assign group
   performance_data <- assign_group(performance_data, identifiers_ya, identifiers_oa, identifiers_pd)
   
-  # Filter out YA
-  performance_data <- performance_data[!performance_data$group == 'YA', ]
-  
   # Cleaner names
   labels(performance_data)  <- c(
     dt_cost_walk_speed_protocol1 = "DT cost walking speed, %",
