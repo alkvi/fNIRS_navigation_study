@@ -554,34 +554,34 @@ format_results_table(results_protocol_2)
 ### Protocol 2 OA
 
 ::: {layout-nrow=2 layout-ncol="3"}
-![ST_walk: Cluster 1](../figures/figures_p2_oa/cond_Straight_walking__cluster_1_cbsi.png)
+![ST_walk: Low performing cluster](../figures/condition_contrast_figures/p2_oa_st_walk_cluster_1.svg)
 
-![ST_walk: Cluster 2](../figures/figures_p2_oa/cond_Straight_walking__cluster_2_cbsi.png)
+![ST_walk: High performing cluster](../figures/condition_contrast_figures/p2_oa_st_walk_cluster_2.svg)
 
-![ST_walk: Cluster 1 - Cluster 2](../figures/figures_p2_oa/cond_Straight_walking__cluster_1-cond_Straight_walking__cluster_2_cbsi.png)
+![ST_walk: High - Low](../figures/condition_contrast_figures/p2_oa_st_walk.svg)
 
-![ST_nav: Cluster 1](../figures/figures_p2_oa/cond_Navigated_walking__cluster_1_cbsi.png)
+![ST_nav: Low performing cluster](../figures/condition_contrast_figures/p2_oa_st_nav_cluster_1.svg)
 
-![ST_nav: Cluster 2](../figures/figures_p2_oa/cond_Navigated_walking__cluster_2_cbsi.png)
+![ST_nav: High performing cluster](../figures/condition_contrast_figures/p2_oa_st_nav_cluster_2.svg)
 
-![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p2_oa/cond_Navigated_walking__cluster_1-cond_Navigated_walking__cluster_2_cbsi.png)
+![ST_nav: High - Low](../figures/condition_contrast_figures/p2_oa_st_nav.svg)
 
 :::
 
 ### Protocol 2 PD
 
 ::: {layout-nrow=2 layout-ncol="3"}
-![ST_walk: Cluster 1](../figures/figures_p2_pd/cond_Straight_walking__cluster_1_cbsi.png)
+![ST_walk: Low performing cluster](../figures/condition_contrast_figures/p2_pd_st_walk_cluster_2.svg)
 
-![ST_walk: Cluster 2](../figures/figures_p2_pd/cond_Straight_walking__cluster_2_cbsi.png)
+![ST_walk: High performing cluster](../figures/condition_contrast_figures/p2_pd_st_walk_cluster_1.svg)
 
-![ST_walk: Cluster 1 - Cluster 2](../figures/figures_p2_pd/cond_Straight_walking__cluster_1-cond_Straight_walking__cluster_2_cbsi.png)
+![ST_walk: High - Low](../figures/condition_contrast_figures/p2_pd_st_walk.svg)
 
-![ST_nav: Cluster 1](../figures/figures_p2_pd/cond_Navigated_walking__cluster_1_cbsi.png)
+![ST_nav: Low performing cluster](../figures/condition_contrast_figures/p2_pd_st_nav_cluster_2.svg)
 
-![ST_nav: Cluster 2](../figures/figures_p2_pd/cond_Navigated_walking__cluster_2_cbsi.png)
+![ST_nav: High performing cluster](../figures/condition_contrast_figures/p2_pd_st_nav_cluster_1.svg)
 
-![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p2_pd/cond_Navigated_walking__cluster_1-cond_Navigated_walking__cluster_2_cbsi.png)
+![ST_nav: High - Low](../figures/condition_contrast_figures/p2_pd_st_nav.svg)
 
 :::
 
@@ -598,17 +598,17 @@ format_results_table(results_protocol_3)
 ### Protocol 3 OA
 
 ::: {layout-nrow=2 layout-ncol="3"}
-![ST_nav: Cluster 1](../figures/figures_p3_oa/cond_Navigation__cluster_1_cbsi.png)
+![ST_nav: Low performing cluster](../figures/condition_contrast_figures/p3_oa_st_nav_cluster_1.svg)
 
-![ST_nav: Cluster 2](../figures/figures_p3_oa/cond_Navigation__cluster_2_cbsi.png)
+![ST_nav: High performing cluster](../figures/condition_contrast_figures/p3_oa_st_nav_cluster_2.svg)
 
-![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p3_oa/cond_Navigation__cluster_1-cond_Navigation__cluster_2_cbsi.png)
+![ST_nav: High - Low](../figures/condition_contrast_figures/p3_oa_st_nav.svg)
 
-![DT_nav: Cluster 1](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_1_cbsi.png)
+![DT_nav: Low performing cluster](../figures/condition_contrast_figures/p3_oa_dt_nav_cluster_1.svg)
 
-![DT_nav: Cluster 2](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+![DT_nav: High performing cluster](../figures/condition_contrast_figures/p3_oa_dt_nav_cluster_1.svg)
 
-![DT_nav: Cluster 1 - Cluster 2](../figures/figures_p3_oa/cond_Navigation_and_Aud_Stroop__cluster_1-cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+![DT_nav: High - Low](../figures/condition_contrast_figures/p3_oa_dt_nav.svg)
 
 :::
 
@@ -616,17 +616,17 @@ format_results_table(results_protocol_3)
 ### Protocol 3 PD
 
 ::: {layout-nrow=2 layout-ncol="3"}
-![ST_nav: Cluster 1](../figures/figures_p3_pd/cond_Navigation__cluster_1_cbsi.png)
+![ST_nav: Low performing cluster](../figures/condition_contrast_figures/p3_pd_st_nav_cluster_2.svg)
 
-![ST_nav: Cluster 2](../figures/figures_p3_pd/cond_Navigation__cluster_2_cbsi.png)
+![ST_nav: High performing cluster](../figures/condition_contrast_figures/p3_pd_st_nav_cluster_1.svg)
 
-![ST_nav: Cluster 1 - Cluster 2](../figures/figures_p3_pd/cond_Navigation__cluster_1-cond_Navigation__cluster_2_cbsi.png)
+![ST_nav: High - Low](../figures/condition_contrast_figures/p3_pd_st_nav.svg)
 
-![DT_nav: Cluster 1](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_1_cbsi.png)
+![DT_nav: Low performing cluster](../figures/condition_contrast_figures/p3_pd_dt_nav_cluster_2.svg)
 
-![DT_nav: Cluster 2](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+![DT_nav: High performing cluster](../figures/condition_contrast_figures/p3_pd_dt_nav_cluster_1.svg)
 
-![DT_nav: Cluster 1 - Cluster 2](../figures/figures_p3_pd/cond_Navigation_and_Aud_Stroop__cluster_1-cond_Navigation_and_Aud_Stroop__cluster_2_cbsi.png)
+![DT_nav: High - Low](../figures/condition_contrast_figures/p3_pd_dt_nav.svg)
 
 :::
 

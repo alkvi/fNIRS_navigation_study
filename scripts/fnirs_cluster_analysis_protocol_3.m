@@ -4,6 +4,10 @@ clear;
 
 % File locations
 results_file = "../data/results_protocol_3.csv";
+groupstats_oa_file = "../data/groupstats_oa_protocol_3.csv";
+groupstats_pd_file = "../data/groupstats_pd_protocol_3.csv";
+groupstats_oa_file_contrast = "../data/groupstats_oa_protocol_3_contrast.csv";
+groupstats_pd_file_contrast = "../data/groupstats_pd_protocol_3_contrast.csv";
 
 % Load
 subjstats_file = "../data/mat_files/SubjStats_setup_3_cbsi.mat";
@@ -149,7 +153,6 @@ end
 
 %% Cluster - OA
 
-folder = '../figures/figures_p3_oa';
 formula = 'beta ~ -1 + cond:cluster + (1|SubjectID)'; 
 
 % Run group model
@@ -159,10 +162,8 @@ job.dummyCoding = 'full';
 job.include_diagnostics = true;
 GroupStats_oa = job.run(SubjStats_oa);
 
-GroupStats_oa.probe.defaultdrawfcn='3D mesh (frontal)';
-GroupStats_oa.probe = GroupStats_oa.probe.SetFiducials_Visibility(false);
-GroupStats_oa.draw('tstat', [-10 10], 'q < 0.05');
-GroupStats_oa.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+% Write channel-level table for later visualization
+writetable(GroupStats_oa.table, groupstats_oa_file)
 
 % PFC
 roi_result_oa = nirs.util.roiAverage(GroupStats_oa, ROI_PFC, "PFC");
@@ -176,10 +177,7 @@ roi_result_oa_ba46 = AddDiagnostics(roi_result_oa, formula, "OA", "OA_model", ""
 
 c = [-1 1 0 0];
 ContrastStats = GroupStats_oa.ttest(c);
-ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
-ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);
-ContrastStats.draw('tstat', [-10 10], 'q < 0.05');
-ContrastStats.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+contrast_table_1 = ContrastStats.table;
 
 roi_result_oa_contrast_1_pfc = nirs.util.roiAverage(ContrastStats, ROI_PFC, "PFC");
 roi_result_oa_contrast_1_pfc.group = repmat("OA", size(roi_result_oa_contrast_1_pfc,1),1);
@@ -190,10 +188,7 @@ disp(roi_result_oa_contrast_1_ba46);
 
 c = [0 0 -1 1];
 ContrastStats = GroupStats_oa.ttest(c);
-ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
-ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);
-ContrastStats.draw('tstat', [-10 10], 'q < 0.05');
-ContrastStats.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+contrast_table_2 = ContrastStats.table;
 
 roi_result_oa_contrast_2_pfc = nirs.util.roiAverage(ContrastStats, ROI_PFC, "PFC");
 roi_result_oa_contrast_2_pfc.group = repmat("OA", size(roi_result_oa_contrast_2_pfc,1),1);
@@ -201,6 +196,10 @@ disp(roi_result_oa_contrast_2_pfc);
 roi_result_oa_contrast_2_ba46 = nirs.util.roiAverage(ContrastStats, ROI_ba_46, "BA46");
 roi_result_oa_contrast_2_ba46.group = repmat("OA", size(roi_result_oa_contrast_2_ba46,1),1);
 disp(roi_result_oa_contrast_2_ba46);
+
+% Write channel-level contrast for visualization
+ContrastTable = [contrast_table_1; contrast_table_2];
+writetable(ContrastTable, groupstats_oa_file_contrast);
 
 %% Cluster - PD
 
@@ -213,10 +212,8 @@ job.dummyCoding = 'full';
 job.include_diagnostics = true;
 GroupStats_pd = job.run(SubjStats_pd);
 
-GroupStats_pd.probe.defaultdrawfcn='3D mesh (frontal)';
-GroupStats_pd.probe = GroupStats_pd.probe.SetFiducials_Visibility(false);
-GroupStats_pd.draw('tstat', [-10 10], 'q < 0.05');
-GroupStats_pd.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+% Write channel-level table for later visualization
+writetable(GroupStats_pd.table, groupstats_pd_file)
 
 % PFC
 roi_result_pd = nirs.util.roiAverage(GroupStats_pd, ROI_PFC, "PFC");
@@ -230,10 +227,7 @@ roi_result_pd_ba46 = AddDiagnostics(roi_result_pd, formula, "PD", "PD_model", ""
 
 c = [1 -1 0 0];
 ContrastStats = GroupStats_pd.ttest(c);
-ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
-ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);
-ContrastStats.draw('tstat', [-10 10], 'q < 0.05');
-ContrastStats.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+contrast_table_1 = ContrastStats.table;
 
 roi_result_pd_contrast_1_pfc = nirs.util.roiAverage(ContrastStats, ROI_PFC, "PFC");
 roi_result_pd_contrast_1_pfc.group = repmat("PD", size(roi_result_pd_contrast_1_pfc,1),1);
@@ -244,10 +238,7 @@ disp(roi_result_pd_contrast_1_ba46);
 
 c = [0 0 1 -1];
 ContrastStats = GroupStats_pd.ttest(c);
-ContrastStats.probe.defaultdrawfcn='3D mesh (frontal)';
-ContrastStats.probe = ContrastStats.probe.SetFiducials_Visibility(false);
-ContrastStats.draw('tstat', [-10 10], 'q < 0.05');
-ContrastStats.printAll('tstat', [-10 10], 'q < 0.05', folder, 'png')
+contrast_table_2 = ContrastStats.table;
 
 roi_result_pd_contrast_2_pfc = nirs.util.roiAverage(ContrastStats, ROI_PFC, "PFC");
 roi_result_pd_contrast_2_pfc.group = repmat("PD", size(roi_result_pd_contrast_2_pfc,1),1);
@@ -255,6 +246,9 @@ disp(roi_result_pd_contrast_2_pfc);
 roi_result_pd_contrast_2_ba46 = nirs.util.roiAverage(ContrastStats, ROI_ba_46, "BA46");
 roi_result_pd_contrast_2_ba46.group = repmat("PD", size(roi_result_pd_contrast_2_ba46,1),1);
 disp(roi_result_pd_contrast_2_ba46);
+
+ContrastTable = [contrast_table_1; contrast_table_2];
+writetable(ContrastTable, groupstats_pd_file_contrast);
 
 %% Save result tables
 

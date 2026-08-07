@@ -4,3 +4,4 @@ venv*
 *.Rhistory
 manuscript
 sens_front_ba9_ba46*
+.ipynb_checkpoints/
