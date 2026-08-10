@@ -1005,6 +1005,8 @@ ggsave(
 
 ## Neuroimaging results
 
+Directly contrasting high vs low performing clusters did not reveal significant differences in BA46 activity. However, examining clusters individually did reveal some patterns.
+
 The high performing cluster in the OA group had an increase in activity in BA46 compared to rest during navigation in protocol 2. The low performing cluster did not have any significant increase of activity in BA46.
 
 In the PD group, both clusters had an increase in dlPFC activity during navigation compared to rest in protocol 2, but only the high performing cluster had an increase in dlPFC activity during single- and dual-task navigation during protocol 3.
@@ -1072,6 +1074,39 @@ results_protocol_2 <- results_protocol_2 %>%
   ) %>%
   select(group, everything())
 
+results_protocol_2_contrast <- read.csv("../data/results_protocol_2_contrast.csv")
+results_protocol_2_contrast <- results_protocol_2_contrast %>%
+  filter(ROI == "BA46") %>%
+  select(-type, -q) %>%
+  rename(Condition = Contrast) %>%
+  mutate(
+    Condition = if_else(
+      group == "PD",
+      str_replace_all(
+        Condition,
+        c(
+          "cond_" = "",
+          "Navigated_walking" = "Navigation",
+          "Straight_walking" = "Straight walking",
+          ":cluster_1" = " (high performing)",
+          ":cluster_2" = " (low performing)"
+        )
+      ),
+      str_replace_all(
+        Condition,
+        c(
+          "cond_" = "",
+          "Navigated_walking" = "Navigation",
+          "Straight_walking" = "Straight walking",
+          ":cluster_1" = " (low performing)",
+          ":cluster_2" = " (high performing)"
+        )
+      )
+    ),
+    FDR_p = p.adjust(p, method = "BH")
+  ) %>%
+  select(group, everything())
+
 
 results_protocol_3 = read.csv("../data/results_protocol_3.csv")
 results_protocol_3 <- results_protocol_3 %>%
@@ -1104,6 +1139,36 @@ results_protocol_3 <- results_protocol_3 %>%
   ) %>%
   select(group, everything())
 
+results_protocol_3_contrast <- read.csv("../data/results_protocol_3_contrast.csv")
+results_protocol_3_contrast <- results_protocol_3_contrast %>%
+  filter(ROI == "BA46") %>%
+  select(-type, -q) %>%
+  rename(Condition = Contrast) %>%
+  mutate(
+    Condition = if_else(
+      group == "PD",
+      str_replace_all(
+        Condition,
+        c(
+          "cond_Navigation_and_Aud_Stroop" = "Navigation DT",
+          "cond_Navigation" = "Navigation ST",
+          ":cluster_1" = " (high performing)",
+          ":cluster_2" = " (low performing)"
+        )
+      ),
+      str_replace_all(
+        Condition,
+        c(
+          "cond_Navigation_and_Aud_Stroop" = "Navigation DT",
+          "cond_Navigation" = "Navigation ST",
+          ":cluster_1" = " (low performing)",
+          ":cluster_2" = " (high performing)"
+        )
+      )
+    ),
+    FDR_p = p.adjust(p, method = "BH")
+  ) %>%
+  select(group, everything())
 
 ```
 
@@ -1113,6 +1178,8 @@ results_protocol_3 <- results_protocol_3 %>%
 ```{r, results='asis'}
 
 format_results_table(results_protocol_2)
+
+format_results_table(results_protocol_2_contrast)
 
 ```
 
@@ -1157,6 +1224,8 @@ format_results_table(results_protocol_2)
 ```{r, results='asis'}
 
 format_results_table(results_protocol_3)
+
+format_results_table(results_protocol_3_contrast)
 
 ```
 
