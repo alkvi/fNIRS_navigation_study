@@ -239,8 +239,12 @@ load_subject_performance_data <- function () {
     DT_protocol_3_stroop_time = "Answer time (DT), s",
     nav_s2_hesitation = "Hesitations (navigation)",
     nav_s2_wrong = "Mistakes (navigation)",
-    acc_s3_hesitation_tot = "Hesitations (ST)",
-    acc_s3_wrong_tot = "Mistakes (DT)")
+    acc_s3_hesitation_st = "Hesitations (ST)",
+    acc_s3_hesitation_dt = "Hesitations (DT)",
+    acc_s3_hesitation_tot = "Hesitations (total)",
+    acc_s3_wrong_st = "Mistakes (ST)",
+    acc_s3_wrong_dt = "Mistakes (DT)",
+    acc_s3_wrong_tot = "Mistakes (total)")
 
   return(performance_data)
   

@@ -28,6 +28,12 @@ library(stringr)
 library(forcats)
 library(arsenal)
 
+library(ggplot2)
+library(tidyverse)
+library(patchwork)
+library(cowplot)
+library(labelled)
+
 library(gt)
 library(gtsummary)
 
@@ -83,7 +89,7 @@ From 20-30% of participants who had channels below criteria in the lower channel
 
 ![Channel-level signal quality in terms of % of participants in which channel was marked as below quality criteria](../figures_quality/bad_channels_combined_percent_07_01.JPG)
 
-## Cluster demographics and performance
+## Demographics and performance
 
 ```{r}
 
@@ -152,7 +158,7 @@ subject_data_pd <- subject_data %>% filter(group == "PD")
 
 ```
 
-## Baseline performance 
+### Demographics
 
 ```{r}
 #| warning: false
@@ -162,75 +168,133 @@ subject_data_pd <- subject_data %>% filter(group == "PD")
 tab1_demo <-
   tbl_summary(
     subject_data,
-    include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man,
-                mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret, vf_sum),
+    include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man),
     by = group,
     missing = "no",
-    type = list(frandin_grimby.x ~ "continuous"),
+    type = list(
+      frandin_grimby.x ~ "continuous",
+      sex ~ "dichotomous"
+    ),
+    value = list(
+      sex ~ "Female"
+    ),
     digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0),
   ) |> 
-  add_ci() |>
   add_p() |>
-  add_q() |>
-  bold_p(t = 0.05, q=TRUE) |>
+  bold_p(t = 0.05) |>
   modify_header(
     label ~ "**Variable**",
-  )
+  ) |>
+  modify_caption("**Demographics**")
 
 tab1_demo
+
+tab1_clinical <-
+  tbl_summary(
+    subject_data,
+    include = c(mb_total, g12_sum, tmt_2, tmt_4, tmt_4_tmt_2_contrast, cwit_3, ravlt_ret, vf_sum),
+    by = group,
+    missing = "no"
+  ) |> 
+  add_p() |>
+  bold_p(t = 0.05) |>
+  modify_header(
+    label ~ "**Variable**",
+  ) |>
+  modify_caption("**Clinical & neuropsychological**")
+
+tab1_clinical
+
+```
+
+### Performance 
+
+```{r}
+#| warning: false
 
 # We want to compare the performance variables we use for clustering.
 # Some values are missing, so calculate how many and append to table.
 # These are the ones that are imputed in the clustering.
 
+protocol2_vars <- c(
+  "mean_walking_speed_protocol2_ST_walk",
+  "mean_walking_speed_protocol2_ST_navigation",
+  "mean_stride_length_protocol2_ST_walk",
+  "mean_stride_length_protocol2_ST_navigation",
+  "mean_cadence_protocol2_ST_walk",
+  "mean_cadence_protocol2_ST_navigation",
+  "step_time_variability_protocol2_ST_walk",
+  "step_time_variability_protocol2_ST_navigation",
+  "turns_velocity_protocol_2",
+  "nav_s2_hesitation",
+  "nav_s2_wrong"
+)
+
 tab1_performance <-
   tbl_summary(
     performance_data,
-    include = c(
-      mean_walking_speed_protocol2_ST_walk,
-      mean_walking_speed_protocol2_ST_navigation,
-      mean_stride_length_protocol2_ST_walk,
-      mean_stride_length_protocol2_ST_navigation,
-      mean_cadence_protocol2_ST_walk,
-      mean_cadence_protocol2_ST_navigation,
-      step_time_variability_protocol2_ST_walk,
-      step_time_variability_protocol2_ST_navigation,
-      turns_velocity_protocol_2,
-      nav_s2_hesitation,
-      nav_s2_wrong,
-      mean_walking_speed_protocol3_ST_navigation,
-      mean_walking_speed_protocol3_DT_navigation,
-      mean_stride_length_protocol3_ST_navigation,
-      mean_stride_length_protocol3_DT_navigation,
-      mean_cadence_protocol3_ST_navigation,
-      mean_cadence_protocol3_DT_navigation,
-      step_time_variability_protocol3_ST_navigation,
-      step_time_variability_protocol3_DT_navigation,
-      dt_cost_walk_speed_protocol3,
-      dt_cost_stride_length_protocol3,
-      dt_cost_step_time_variability_protocol3,
-      turns_velocity_protocol_3,
-      acc_s3_hesitation_tot,
-      acc_s3_wrong_tot,
-      DT_protocol_3_stroop_acc,
-      DT_protocol_3_stroop_time),
+    include = all_of(protocol2_vars),
     by = group,
     missing = "no",
-    type = list(c(nav_s2_hesitation, nav_s2_wrong, acc_s3_hesitation_tot, acc_s3_wrong_tot) ~ "continuous")
-  ) |> 
+    type = list(c(nav_s2_hesitation, nav_s2_wrong) ~ "continuous")
+  ) |>
   add_p() |>
   add_q() |>
-  bold_p(t = 0.05, q=TRUE) |>
+  bold_p(t = 0.05, q = TRUE) |>
   add_n(
     statistic = "{p_miss}",
-    col_label = "**Missing n (%)**",
-  )
+    col_label = "**Missing n (%)**"
+  ) |>
+  modify_caption("**Walking protocol performance, protocol 2**")
 
 tab1_performance 
 
+protocol3_vars <- c(
+  "mean_walking_speed_protocol3_ST_navigation",
+  "mean_walking_speed_protocol3_DT_navigation",
+  "mean_stride_length_protocol3_ST_navigation",
+  "mean_stride_length_protocol3_DT_navigation",
+  "mean_cadence_protocol3_ST_navigation",
+  "mean_cadence_protocol3_DT_navigation",
+  "step_time_variability_protocol3_ST_navigation",
+  "step_time_variability_protocol3_DT_navigation",
+  "dt_cost_walk_speed_protocol3",
+  "dt_cost_stride_length_protocol3",
+  "dt_cost_step_time_variability_protocol3",
+  "turns_velocity_protocol_3",
+  "acc_s3_hesitation_st",
+  "acc_s3_hesitation_dt",
+  "acc_s3_wrong_st",
+  "acc_s3_wrong_dt",
+  "DT_protocol_3_stroop_acc",
+  "DT_protocol_3_stroop_time"
+)
+
+tab2_performance <-
+  tbl_summary(
+    performance_data,
+    include = all_of(protocol3_vars),
+    by = group,
+    missing = "no",
+    type = list(c(acc_s3_hesitation_st,
+                  acc_s3_hesitation_dt,
+                  acc_s3_wrong_st,
+                  acc_s3_wrong_dt) ~ "continuous")
+  ) |>
+  add_p() |>
+  add_q() |>
+  bold_p(t = 0.05, q = TRUE) |>
+  add_n(
+    statistic = "{p_miss}",
+    col_label = "**Missing n (%)**"
+  ) |>
+  modify_caption("**Walking protocol performance, protocol 3**")
+
+tab2_performance 
+  
 ```
 
-## Cluster demographics
+## Cluster demographics and performance
 
 ```{r}
 #| warning: false
@@ -243,7 +307,13 @@ tab1_oa <-
     include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man),
     by = cluster,
     missing = "no",
-    type = list(frandin_grimby.x ~ "continuous"),
+    type = list(
+      frandin_grimby.x ~ "continuous",
+      sex ~ "dichotomous"
+    ),
+    value = list(
+      sex ~ "Female"
+    ),
     digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0)
   ) |> 
   add_p() |>
@@ -256,7 +326,13 @@ tab1_pd <-
     include = c(sex, age, crf_utbildning_ar, weight, height, frandin_grimby.x, ramlat_12_man),
     by = cluster,
     missing = "no",
-    type = list(frandin_grimby.x ~ "continuous"),
+    type = list(
+      frandin_grimby.x ~ "continuous",
+      sex ~ "dichotomous"
+    ),
+    value = list(
+      sex ~ "Female"
+    ),
     digits = list(crf_utbildning_ar ~ 0, frandin_grimby.x ~ 0)
   ) |> 
   add_p() |>
@@ -303,49 +379,29 @@ tab2 <- tbl_merge(
 tab3_oa <-
   tbl_summary(
     performance_data_oa,
-    include = c(
-      mean_walking_speed_protocol2_ST_walk,
-      mean_walking_speed_protocol2_ST_navigation,
-      mean_stride_length_protocol2_ST_walk,
-      mean_stride_length_protocol2_ST_navigation,
-      mean_cadence_protocol2_ST_walk,
-      mean_cadence_protocol2_ST_navigation,
-      step_time_variability_protocol2_ST_walk,
-      step_time_variability_protocol2_ST_navigation,
-      turns_velocity_protocol_2,
-      nav_s2_hesitation,
-      nav_s2_wrong
-      ),
+    include = all_of(protocol2_vars),
     by = cluster,
     missing = "no",
-    type = list(c(nav_s2_hesitation, nav_s2_wrong) ~ "continuous"),
+    type = list(c(nav_s2_hesitation, 
+                  nav_s2_wrong) ~ "continuous"),
   ) |> 
   add_p() |>
-  bold_p(t = 0.05) |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
   modify_header(label = "**Variable**")
 
 tab3_pd <-
   tbl_summary(
     performance_data_pd,
-    include = c(
-      mean_walking_speed_protocol2_ST_walk,
-      mean_walking_speed_protocol2_ST_navigation,
-      mean_stride_length_protocol2_ST_walk,
-      mean_stride_length_protocol2_ST_navigation,
-      mean_cadence_protocol2_ST_walk,
-      mean_cadence_protocol2_ST_navigation,
-      step_time_variability_protocol2_ST_walk,
-      step_time_variability_protocol2_ST_navigation,
-      turns_velocity_protocol_2,
-      nav_s2_hesitation,
-      nav_s2_wrong
-      ),
+    include = all_of(protocol2_vars),
     by = cluster,
     missing = "no",
-    type = list(c(nav_s2_hesitation, nav_s2_wrong) ~ "continuous"),
+    type = list(c(nav_s2_hesitation, 
+                  nav_s2_wrong) ~ "continuous"),
   ) |> 
   add_p() |>
-  bold_p(t = 0.05) |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
   modify_header(label = "**Variable**")
   
 tab3 <- tbl_merge(
@@ -357,85 +413,595 @@ tab3 <- tbl_merge(
 tab4_oa <-
   tbl_summary(
     performance_data_oa,
-    include = c(
-      mean_walking_speed_protocol3_ST_navigation,
-      mean_walking_speed_protocol3_DT_navigation,
-      mean_stride_length_protocol3_ST_navigation,
-      mean_stride_length_protocol3_DT_navigation,
-      mean_cadence_protocol3_ST_navigation,
-      mean_cadence_protocol3_DT_navigation,
-      step_time_variability_protocol3_ST_navigation,
-      step_time_variability_protocol3_DT_navigation,
-      dt_cost_walk_speed_protocol3,
-      dt_cost_stride_length_protocol3,
-      dt_cost_step_time_variability_protocol3,
-      turns_velocity_protocol_3,
-      acc_s3_hesitation_tot,
-      acc_s3_wrong_tot,
-      DT_protocol_3_stroop_acc,
-      DT_protocol_3_stroop_time
-      ),
+    include = all_of(protocol3_vars),
     by = cluster,
     missing = "no",
-    type = list(c(acc_s3_hesitation_tot, 
-                  acc_s3_wrong_tot,
+    type = list(c(acc_s3_hesitation_st,
+                  acc_s3_hesitation_dt,
+                  acc_s3_wrong_st,
+                  acc_s3_wrong_dt,
                   DT_protocol_3_stroop_acc, 
                   DT_protocol_3_stroop_time) ~ "continuous"),
   ) |> 
   add_p() |>
-  bold_p(t = 0.05) |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
   modify_header(label = "**Variable**")
 
 tab4_pd <-
   tbl_summary(
     performance_data_pd,
-    include = c(
-      mean_walking_speed_protocol3_ST_navigation,
-      mean_walking_speed_protocol3_DT_navigation,
-      mean_stride_length_protocol3_ST_navigation,
-      mean_stride_length_protocol3_DT_navigation,
-      mean_cadence_protocol3_ST_navigation,
-      mean_cadence_protocol3_DT_navigation,
-      step_time_variability_protocol3_ST_navigation,
-      step_time_variability_protocol3_DT_navigation,
-      dt_cost_walk_speed_protocol3,
-      dt_cost_stride_length_protocol3,
-      dt_cost_step_time_variability_protocol3,
-      turns_velocity_protocol_3,
-      acc_s3_hesitation_tot,
-      acc_s3_wrong_tot,
-      DT_protocol_3_stroop_acc,
-      DT_protocol_3_stroop_time
-      ),
+    include = all_of(protocol3_vars),
     by = cluster,
     missing = "no",
-    type = list(c(acc_s3_hesitation_tot, 
-                  acc_s3_wrong_tot,
+    type = list(c(acc_s3_hesitation_st,
+                  acc_s3_hesitation_dt,
+                  acc_s3_wrong_st,
+                  acc_s3_wrong_dt,
                   DT_protocol_3_stroop_acc, 
                   DT_protocol_3_stroop_time) ~ "continuous"),
   ) |> 
   add_p() |>
-  bold_p(t = 0.05) |>
+  add_q() |>
+  bold_p(t = 0.05, q=TRUE) |>
   modify_header(label = "**Variable**")
   
 tab4 <- tbl_merge(
   tbls = list(tab4_oa, tab4_pd),
   tab_spanner = c("**OA**", "**PD**")
 ) |>
-  modify_caption("**Table 4. Performance variables, protocol 3**")
+  modify_caption("**Table 3. Performance variables, protocol 3**")
+
 
 # Display the tables in the next block
 
 ```
 
+### Demographics
+
 ```{r, results='asis'}
 
 tab1
 tab2
+
+```
+
+### Performance
+
+::: {.column-page}
+
+```{r, results='asis'}
+
 tab3
 tab4
 
 ```
+
+:::
+
+### Visualization
+
+```{r}
+
+# Plot helper function
+make_domain_plot <- function(data, domain_name, disease_group,
+                             show_y = TRUE, xlims = NULL) {
+  
+  plot_data <- data |>
+    filter(
+      domain == domain_name,
+      group == disease_group
+    )
+  
+  bg_data <- plot_data |>
+    filter(!highlight)
+  
+  hl_data <- plot_data |>
+    filter(highlight) |>
+    mutate(
+      xmin = pmin(low, high),
+      xmax = pmax(low, high)
+    )
+  
+  offset <- diff(xlims[[domain_name]]) * 0.03
+
+  p <- ggplot(plot_data, aes(y = variable_label)) +
+    scale_y_discrete(
+      limits = levels(droplevels(plot_data$variable_label))
+    ) +
+
+    # faded background
+    geom_segment(
+      data = bg_data,
+      aes(
+        x = low,
+        xend = high,
+        yend = variable_label
+      ),
+      alpha = .2,
+      colour = "grey60"
+    ) +
+    geom_point(
+      data = bg_data,
+      aes(x = low, colour = "low"),
+      alpha = .2,
+      size = 2
+    ) +
+    geom_point(
+      data = bg_data,
+      aes(x = high, colour = "high"),
+      alpha = .2,
+      size = 2
+    ) +
+  
+    # highlighted
+    geom_segment(
+      data = hl_data,
+      aes(
+        x = low,
+        xend = high,
+        yend = variable_label
+      ),
+      linewidth = 0.8
+    ) +
+    geom_point(
+      data = hl_data,
+      aes(x = low, colour = "low"),
+      size = 3
+    ) +
+    geom_point(
+      data = hl_data,
+      aes(x = high, colour = "high"),
+      size = 3
+    ) +
+    scale_colour_manual(
+      name = "Cluster",
+      values = c(
+        "low" = "#D55E00",
+        "high" = "#0072B2"
+      ),
+      breaks = c("low", "high")
+    ) +
+  
+    # labels only for significant variables
+    geom_text(
+      data = hl_data,
+      aes(
+        x = xmin - offset,
+        label = round(xmin, 1)
+      ),
+      hjust = 1,
+      size = 4
+    ) +
+    geom_text(
+      data = hl_data,
+      aes(
+        x = xmax + offset,
+        label = round(xmax, 1)
+      ),
+      hjust = 0,
+      size = 4
+    ) +
+    labs(
+      x = NULL,
+      y = NULL
+    ) +
+    theme_bw(base_size = 14) +
+    theme(
+      axis.text.y = element_text(size = 13),
+      axis.text.x = element_text(size = 13),
+      legend.text = element_text(size = 13),
+      legend.title = element_text(size = 14),
+      panel.grid.major.y = element_line(colour = "grey90"),
+      panel.grid.minor = element_blank(),
+      legend.position = "none"
+    )
+  
+  if (!is.null(xlims)) {
+    p <- p +
+      scale_x_continuous(
+        limits = xlims[[domain_name]]
+      )
+  }
+
+  if (!show_y) {
+    p <- p +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()
+      )
+  }
+
+  p
+}
+
+```
+
+#### Protocol 2
+
+```{r}
+
+# Get labels
+var_labels <- performance_data |>
+  select(all_of(protocol2_vars)) |>
+  var_label() |>
+  unlist()
+
+# Extract FDR-adjusted p from table
+qvals <-
+  tab3$table_body |>
+  select(variable, q.value_1, q.value_2) |>
+  pivot_longer(
+    cols = starts_with("q.value"),
+    names_to = "group",
+    values_to = "q.value"
+  ) |>
+  mutate(
+    group = recode(
+      group,
+      q.value_1 = "OA",
+      q.value_2 = "PD"
+    )
+  )
+
+# Set up data for dumbbell plot
+plot_df <-
+  performance_data |>
+  pivot_longer(
+    cols = all_of(protocol2_vars),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+  mutate(
+    variable_label = var_labels[variable]
+  ) |>
+  group_by(group, cluster, variable, variable_label) |>
+  summarise(
+    median = median(value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(
+    qvals,
+    by = c("group", "variable")
+  ) |>
+  mutate(
+    highlight = q.value < 0.05
+  )
+
+# Make wide per cluster
+plot_wide <-
+  plot_df |>
+  pivot_wider(
+    names_from = cluster,
+    values_from = median
+  ) |>
+  rename(
+    high = `high performing`,
+    low = `low performing`
+  )
+
+# Variable order in the plot
+plot_wide <-
+  plot_wide |>
+  mutate(
+    variable_label = factor(
+      variable_label,
+      levels = c(
+        "Walking speed (straight), m/s",
+        "Walking speed (navigation), m/s",
+        "Stride length (straight), m",
+        "Stride length (navigation), m",
+        "Hesitations (navigation)",
+        "Mistakes (navigation)",
+        "Turn velocity (peak), deg/s",
+        "Cadence (straight), steps/min",
+        "Cadence (navigation), steps/min",
+        "Step time variability (straight), ms",
+        "Step time variability (navigation), ms"
+      )
+    )
+  )
+
+# Add domain (or rather panel to separate scales)
+plot_wide <- plot_wide |>
+  mutate(
+    domain = case_when(
+      variable %in% c(
+        "mean_walking_speed_protocol2_ST_walk",
+        "mean_walking_speed_protocol2_ST_navigation",
+        "mean_stride_length_protocol2_ST_walk",
+        "mean_stride_length_protocol2_ST_navigation",
+        "nav_s2_hesitation",
+        "nav_s2_wrong"
+      ) ~ "Panel_1",
+
+      variable %in% c(
+        "turns_velocity_protocol_2",
+        "mean_cadence_protocol2_ST_walk",
+        "mean_cadence_protocol2_ST_navigation"
+      ) ~ "Panel_2",
+
+      variable %in% c(
+        "step_time_variability_protocol2_ST_walk",
+        "step_time_variability_protocol2_ST_navigation"
+      ) ~ "Panel_3",
+
+      TRUE ~ "Etc"
+    ),
+    
+    domain = factor(
+      domain,
+      levels = c(
+        "Panel_1",
+        "Panel_2",
+        "Panel_3"
+      )
+    )
+  )
+
+plot_wide <- plot_wide %>%
+  mutate(variable_label = forcats::fct_rev(variable_label))
+
+xlims <- list(
+  "Panel_1" = c(0.0, 3.0),
+  "Panel_2" = c(50, 160),
+  "Panel_3" = c(0, 80)
+)
+
+panel_1 <-
+  make_domain_plot(plot_wide, "Panel_1", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_1", "PD", show_y = FALSE, xlims=xlims)
+
+panel_2 <-
+  make_domain_plot(plot_wide, "Panel_2", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_2", "PD", show_y = FALSE, xlims=xlims)
+
+panel_3 <-
+  make_domain_plot(plot_wide, "Panel_3", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_3", "PD", show_y = FALSE, xlims=xlims)
+
+header_row <-
+  patchwork::wrap_elements(
+    grid::textGrob(
+      "OA                                                    PD",
+      gp = grid::gpar(fontsize = 12, fontface = "bold")
+    )
+  )
+
+panel_1 <- panel_1 + theme(legend.position = "right")
+panel_2 <- panel_2
+panel_3 <- panel_3
+
+final_plot <-
+  (
+    header_row /
+    panel_1 /
+    panel_2 /
+    panel_3
+  ) +
+  plot_layout(
+    guides = "collect",
+    heights = c(0.15, 1.8, 1.2, 1)
+  ) &
+  theme(legend.position = "right")
+
+final_plot
+
+ggsave(
+  "../figures/protocol_2_performance.svg",
+  plot = final_plot,
+  width = 10,
+  height = 5,
+  units = "in"
+)
+
+```
+
+#### Protocol 3
+
+```{r}
+
+# Get labels
+var_labels <- performance_data |>
+  select(all_of(protocol3_vars)) |>
+  var_label() |>
+  unlist()
+
+# Extract FDR-adjusted p from table
+qvals <-
+  tab4$table_body |>
+  select(variable, q.value_1, q.value_2) |>
+  pivot_longer(
+    cols = starts_with("q.value"),
+    names_to = "group",
+    values_to = "q.value"
+  ) |>
+  mutate(
+    group = recode(
+      group,
+      q.value_1 = "OA",
+      q.value_2 = "PD"
+    )
+  )
+
+# Set up data for dumbbell plot
+plot_df <-
+  performance_data |>
+  pivot_longer(
+    cols = all_of(protocol3_vars),
+    names_to = "variable",
+    values_to = "value"
+  ) |>
+  mutate(
+    variable_label = var_labels[variable]
+  ) |>
+  group_by(group, cluster, variable, variable_label) |>
+  summarise(
+    median = median(value, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(
+    qvals,
+    by = c("group", "variable")
+  ) |>
+  mutate(
+    highlight = q.value < 0.05
+  )
+
+# Make wide per cluster
+plot_wide <-
+  plot_df |>
+  pivot_wider(
+    names_from = cluster,
+    values_from = median
+  ) |>
+  rename(
+    high = `high performing`,
+    low = `low performing`
+  )
+
+# Add domain (or rather panel to separate scales)
+plot_wide <- plot_wide |>
+  mutate(
+    domain = case_when(
+      variable %in% c(
+        "mean_walking_speed_protocol3_ST_navigation",
+        "mean_walking_speed_protocol3_DT_navigation",
+        "mean_stride_length_protocol3_ST_navigation",
+        "mean_stride_length_protocol3_DT_navigation",
+        "acc_s3_hesitation_st",
+        "acc_s3_hesitation_dt",
+        "acc_s3_wrong_st",
+        "acc_s3_wrong_dt",
+        "DT_protocol_3_stroop_time"
+      ) ~ "Panel_1",
+      
+      variable %in% c(
+        "dt_cost_walk_speed_protocol3",
+        "dt_cost_stride_length_protocol3",
+        "dt_cost_step_time_variability_protocol3"
+      ) ~ "Panel_2",
+
+      variable %in% c(
+        "turns_velocity_protocol_3",
+        "DT_protocol_3_stroop_acc",
+        "mean_cadence_protocol3_ST_navigation",
+        "mean_cadence_protocol3_DT_navigation"
+      ) ~ "Panel_3",
+
+      variable %in% c(
+        "step_time_variability_protocol3_ST_navigation",
+        "step_time_variability_protocol3_DT_navigation"
+      ) ~ "Panel_4",
+
+      TRUE ~ "Etc"
+    ),
+    
+    domain = factor(
+      domain,
+      levels = c(
+        "Panel_1",
+        "Panel_2",
+        "Panel_3",
+        "Panel_4"
+      )
+    )
+  )
+
+# Variable order in the plot
+plot_wide <-
+  plot_wide |>
+  mutate(
+    variable_label = factor(
+      variable_label,
+      levels = c(
+        "Walking speed (ST), m/s",
+        "Walking speed (DT), m/s",
+        "Stride length (ST), m",
+        "Stride length (DT), m",
+        "Hesitations (ST)",
+        "Hesitations (DT)",
+        "Mistakes (ST)",
+        "Mistakes (DT)",
+        "DT cost walking speed, %",
+        "DT cost stride length, %",
+        "DT cost step time variability, %",
+        "Turn velocity (peak), deg/s",
+        "Accuracy (DT), %",
+        "Cadence (ST), steps/min",
+        "Cadence (DT), steps/min",
+        "Step time variability (ST), ms",
+        "Step time variability (DT), ms",
+        "Answer time (DT), s" 
+      )
+    )
+  )
+
+plot_wide <- plot_wide %>%
+  mutate(variable_label = forcats::fct_rev(variable_label))
+
+xlims <- list(
+  "Panel_1" = c(0.0, 3.0),
+  "Panel_2" = c(0.0, 30.0),
+  "Panel_3" = c(50, 160),
+  "Panel_4" = c(0, 80)
+)
+
+panel_1 <-
+  make_domain_plot(plot_wide, "Panel_1", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_1", "PD", show_y = FALSE, xlims=xlims)
+
+panel_2 <-
+  make_domain_plot(plot_wide, "Panel_2", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_2", "PD", show_y = FALSE, xlims=xlims)
+
+panel_3 <-
+  make_domain_plot(plot_wide, "Panel_3", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_3", "PD", show_y = FALSE, xlims=xlims)
+
+panel_4 <-
+  make_domain_plot(plot_wide, "Panel_4", "OA", show_y = TRUE, xlims=xlims) +
+  make_domain_plot(plot_wide, "Panel_4", "PD", show_y = FALSE, xlims=xlims)
+
+header_row <-
+  patchwork::wrap_elements(
+    grid::textGrob(
+      "OA                                                    PD",
+      gp = grid::gpar(fontsize = 12, fontface = "bold")
+    )
+  )
+
+panel_1 <- panel_1 + theme(legend.position = "right")
+panel_2 <- panel_2
+panel_3 <- panel_3
+panel_4 <- panel_4
+
+final_plot <-
+  (
+    header_row /
+    panel_1 /
+    panel_2 /
+    panel_3 /
+    panel_4
+  ) +
+  plot_layout(
+    guides = "collect",
+    heights = c(0.15, 3, 1, 1, 1)
+  ) &
+  theme(legend.position = "right")
+
+final_plot
+
+ggsave(
+  "../figures/protocol_3_performance.svg",
+  plot = final_plot,
+  width = 10,
+  height = 7,
+  units = "in"
+)
+
+```
+
 
 ## Neuroimaging results
 
@@ -678,7 +1244,6 @@ tab5_pd <-
 tab5_pd
 
 ```
-
 
 # Manuscript
 
