@@ -221,6 +221,10 @@ protocol2_vars <- c(
   "mean_walking_speed_protocol2_ST_navigation",
   "mean_stride_length_protocol2_ST_walk",
   "mean_stride_length_protocol2_ST_navigation",
+  "mean_stance_time_protocol2_ST_walk",
+  "mean_stance_time_protocol2_ST_navigation",
+  "mean_single_support_protocol2_ST_walk",
+  "mean_single_support_protocol2_ST_navigation",
   "mean_cadence_protocol2_ST_walk",
   "mean_cadence_protocol2_ST_navigation",
   "step_time_variability_protocol2_ST_walk",
@@ -251,16 +255,17 @@ tab1_performance
 
 protocol3_vars <- c(
   "mean_walking_speed_protocol3_ST_navigation",
-  "mean_walking_speed_protocol3_DT_navigation",
   "mean_stride_length_protocol3_ST_navigation",
-  "mean_stride_length_protocol3_DT_navigation",
   "mean_cadence_protocol3_ST_navigation",
-  "mean_cadence_protocol3_DT_navigation",
   "step_time_variability_protocol3_ST_navigation",
-  "step_time_variability_protocol3_DT_navigation",
+  "mean_stance_time_protocol3_ST_navigation",
+  "mean_single_support_protocol3_ST_navigation",
   "dt_cost_walk_speed_protocol3",
   "dt_cost_stride_length_protocol3",
+  "dt_cost_cadence_protocol3",
   "dt_cost_step_time_variability_protocol3",
+  "dt_cost_stance_time_protocol3",
+  "dt_cost_single_support_protocol3",
   "turns_velocity_protocol_3",
   "acc_s3_hesitation_st",
   "acc_s3_hesitation_dt",
@@ -568,7 +573,7 @@ make_domain_plot <- function(data, domain_name, disease_group,
       data = hl_data,
       aes(
         x = xmin - offset,
-        label = round(xmin, 1)
+        label = round(xmin, 2)
       ),
       hjust = 1,
       size = 4
@@ -577,7 +582,7 @@ make_domain_plot <- function(data, domain_name, disease_group,
       data = hl_data,
       aes(
         x = xmax + offset,
-        label = round(xmax, 1)
+        label = round(xmax, 2)
       ),
       hjust = 0,
       size = 4
@@ -680,28 +685,6 @@ plot_wide <-
     low = `low performing`
   )
 
-# Variable order in the plot
-plot_wide <-
-  plot_wide |>
-  mutate(
-    variable_label = factor(
-      variable_label,
-      levels = c(
-        "Walking speed (straight), m/s",
-        "Walking speed (navigation), m/s",
-        "Stride length (straight), m",
-        "Stride length (navigation), m",
-        "Hesitations (navigation)",
-        "Mistakes (navigation)",
-        "Turn velocity (peak), deg/s",
-        "Cadence (straight), steps/min",
-        "Cadence (navigation), steps/min",
-        "Step time variability (straight), ms",
-        "Step time variability (navigation), ms"
-      )
-    )
-  )
-
 # Add domain (or rather panel to separate scales)
 plot_wide <- plot_wide |>
   mutate(
@@ -711,6 +694,10 @@ plot_wide <- plot_wide |>
         "mean_walking_speed_protocol2_ST_navigation",
         "mean_stride_length_protocol2_ST_walk",
         "mean_stride_length_protocol2_ST_navigation",
+        "mean_stance_time_protocol2_ST_walk",
+        "mean_stance_time_protocol2_ST_navigation",
+        "mean_single_support_protocol2_ST_walk",
+        "mean_single_support_protocol2_ST_navigation",
         "nav_s2_hesitation",
         "nav_s2_wrong"
       ) ~ "Panel_1",
@@ -739,13 +726,39 @@ plot_wide <- plot_wide |>
     )
   )
 
+# Variable order in the plot
+plot_wide <-
+  plot_wide |>
+  mutate(
+    variable_label = factor(
+      variable_label,
+      levels = c(
+        "Walking speed (straight), m/s",
+        "Walking speed (navigation), m/s",
+        "Stride length (straight), m",
+        "Stride length (navigation), m",
+        "Stance time (straight), s",
+        "Stance time (navigation), s",
+        "Single support (straight), s",
+        "Single support (navigation), s",
+        "Hesitations (navigation)",
+        "Mistakes (navigation)",
+        "Turn velocity (peak), deg/s",
+        "Cadence (straight), steps/min",
+        "Cadence (navigation), steps/min",
+        "Step time variability (straight), ms",
+        "Step time variability (navigation), ms"
+      )
+    )
+  )
+
 plot_wide <- plot_wide %>%
   mutate(variable_label = forcats::fct_rev(variable_label))
 
 xlims <- list(
-  "Panel_1" = c(0.0, 3.0),
+  "Panel_1" = c(0.0, 1.6),
   "Panel_2" = c(50, 160),
-  "Panel_3" = c(0, 80)
+  "Panel_3" = c(0, 70)
 )
 
 panel_1 <-
@@ -781,7 +794,7 @@ final_plot <-
   ) +
   plot_layout(
     guides = "collect",
-    heights = c(0.15, 1.8, 1.2, 1)
+    heights = c(0.15, 3.5, 1.2, 1)
   ) &
   theme(legend.position = "right")
 
@@ -866,9 +879,9 @@ plot_wide <- plot_wide |>
     domain = case_when(
       variable %in% c(
         "mean_walking_speed_protocol3_ST_navigation",
-        "mean_walking_speed_protocol3_DT_navigation",
         "mean_stride_length_protocol3_ST_navigation",
-        "mean_stride_length_protocol3_DT_navigation",
+        "mean_single_support_protocol3_ST_navigation",
+        "mean_stance_time_protocol3_ST_navigation",
         "acc_s3_hesitation_st",
         "acc_s3_hesitation_dt",
         "acc_s3_wrong_st",
@@ -879,19 +892,20 @@ plot_wide <- plot_wide |>
       variable %in% c(
         "dt_cost_walk_speed_protocol3",
         "dt_cost_stride_length_protocol3",
-        "dt_cost_step_time_variability_protocol3"
+        "dt_cost_step_time_variability_protocol3",
+        "dt_cost_cadence_protocol3",
+        "dt_cost_single_support_protocol3",
+        "dt_cost_stance_time_protocol3"
       ) ~ "Panel_2",
 
       variable %in% c(
         "turns_velocity_protocol_3",
         "DT_protocol_3_stroop_acc",
-        "mean_cadence_protocol3_ST_navigation",
-        "mean_cadence_protocol3_DT_navigation"
+        "mean_cadence_protocol3_ST_navigation"
       ) ~ "Panel_3",
 
       variable %in% c(
-        "step_time_variability_protocol3_ST_navigation",
-        "step_time_variability_protocol3_DT_navigation"
+        "step_time_variability_protocol3_ST_navigation"
       ) ~ "Panel_4",
 
       TRUE ~ "Etc"
@@ -916,9 +930,9 @@ plot_wide <-
       variable_label,
       levels = c(
         "Walking speed (ST), m/s",
-        "Walking speed (DT), m/s",
         "Stride length (ST), m",
-        "Stride length (DT), m",
+        "Stance time (ST), s",
+        "Single support (ST), s",
         "Hesitations (ST)",
         "Hesitations (DT)",
         "Mistakes (ST)",
@@ -926,12 +940,13 @@ plot_wide <-
         "DT cost walking speed, %",
         "DT cost stride length, %",
         "DT cost step time variability, %",
+        "DT cost cadence, %",
+        "DT cost stance time, %",
+        "DT cost single support, %",
         "Turn velocity (peak), deg/s",
         "Accuracy (DT), %",
         "Cadence (ST), steps/min",
-        "Cadence (DT), steps/min",
         "Step time variability (ST), ms",
-        "Step time variability (DT), ms",
         "Answer time (DT), s" 
       )
     )
@@ -941,10 +956,10 @@ plot_wide <- plot_wide %>%
   mutate(variable_label = forcats::fct_rev(variable_label))
 
 xlims <- list(
-  "Panel_1" = c(0.0, 3.0),
-  "Panel_2" = c(0.0, 30.0),
-  "Panel_3" = c(50, 160),
-  "Panel_4" = c(0, 80)
+  "Panel_1" = c(0, 1.4),
+  "Panel_2" = c(-10.0, 30.0),
+  "Panel_3" = c(70, 170),
+  "Panel_4" = c(0, 70)
 )
 
 panel_1 <-
@@ -986,7 +1001,7 @@ final_plot <-
   ) +
   plot_layout(
     guides = "collect",
-    heights = c(0.15, 3, 1, 1, 1)
+    heights = c(0.15, 2.6, 2, 1, 0.5)
   ) &
   theme(legend.position = "right")
 
@@ -1106,7 +1121,6 @@ results_protocol_2_contrast <- results_protocol_2_contrast %>%
     FDR_p = p.adjust(p, method = "BH")
   ) %>%
   select(group, everything())
-
 
 results_protocol_3 = read.csv("../data/results_protocol_3.csv")
 results_protocol_3 <- results_protocol_3 %>%
@@ -1289,6 +1303,8 @@ measurement_dates <- merge(diagnosis_data, measurement_dates, by = "subject", al
 measurement_dates$disease_dur <- as.numeric(measurement_dates$year) - as.numeric(measurement_dates$crf_pd_year_phone)
 measurement_dates <- measurement_dates[c("subject", "disease_dur")]
 
+subject_data_pd$mdsupdrs3_hy <- factor(subject_data_pd$mdsupdrs3_hy, levels = 1:4)
+
 # Add measurment dates
 subject_data_pd <- merge(subject_data_pd, measurement_dates, by = "subject", all = FALSE)
 subject_data_pd <- merge(subject_data_pd, updrs_data, by = "subject", all = FALSE)
@@ -1300,17 +1316,37 @@ tab5_pd <-
       led_total,
       updrs_3_total,
       disease_dur,
+      mdsupdrs3_hy
+      ),
+    missing = "no",
+    type = list(c(disease_dur, 
+                  updrs_3_total) ~ "continuous",
+                mdsupdrs3_hy ~ "categorical"),
+  ) |> 
+  modify_header(label = "**Variable**")
+
+tab5_pd
+
+tab5_pd_cluster <-
+  tbl_summary(
+    subject_data_pd,
+    include = c(
+      led_total,
+      updrs_3_total,
+      disease_dur,
+      mdsupdrs3_hy
       ),
     by = cluster,
     missing = "no",
     type = list(c(disease_dur, 
-                  updrs_3_total) ~ "continuous"),
+                  updrs_3_total) ~ "continuous",
+                mdsupdrs3_hy ~ "categorical"),
   ) |> 
   add_p() |>
   bold_p(t = 0.05) |>
   modify_header(label = "**Variable**")
 
-tab5_pd
+tab5_pd_cluster
 
 ```
 

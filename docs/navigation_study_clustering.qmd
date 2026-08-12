@@ -208,7 +208,7 @@ run_clustering_rf <- function (df, k) {
   # Use clustering result as a pseudo-response
   rf_supervised <- randomForest(x = df, y = as.factor(cluster), importance = TRUE)
   importance(rf_supervised)
-  varImpPlot(rf_supervised)
+  varImpPlot(rf_supervised, n.var=5)
   
   return(
     list(
