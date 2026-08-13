@@ -131,7 +131,7 @@ Data from two sub-protocols (*navigation protocol* and *dual-task navigation pro
 
 Gait parameters and turning parameters were collected with three wireless inertial sensors (Opal, APDM Inc.) placed over the lumbar and on the feet. Raw data in each block was analyzed in the Python Gaitmap library [@kuderle2024]. To characterize turning, peak turn velocity was extracted from Mobility Lab (APDM Inc.).
 
-+fNIRS data was collected using a NIRSport2 (NIRx), with an 8x8 montage covering the prefrontal area, including short-separation channels.
++fNIRS data was collected using a NIRSport2 (NIRx), with an 8x8 montage covering the prefrontal area, including short-separation channels. Sampling frequency was 10 Hz.
 
 ## Hierarchical clustering
 
@@ -200,7 +200,7 @@ In the dual-task navigation protocol the +PD group had a lower walking speed and
 | Turn velocity (peak), deg/s            |          137 (123, 151) |          114 (101, 132) |                **<0.001** |           3.3 |
 | Hesitations (navigation)               |                1 (0, 3) |                1 (0, 3) |                  >0.9 |           4.4 |
 | Mistakes (navigation)                  |                1 (0, 2) |                0 (0, 2) |                  >0.9 |           4.4 |
-: Performance variables, protocol 2. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum exact test; Wilcoxon rank sum test. ^3^False discovery rate correction for multiple testing. {#tbl:perf_protocol_2} 
+: Performance variables, navigation protocol. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum exact test; Wilcoxon rank sum test. ^3^False discovery rate correction for multiple testing. {#tbl:perf_protocol_2} 
 
 | Characteristic                   | OA (N = 48)<sup>1</sup> | PD (N = 42)<sup>1</sup> | q-value<sup>2,3</sup> | Missing n (%) |
 | -------------------------------- | ----------------------: | ----------------------: | --------------------: | ------------: |
@@ -223,7 +223,7 @@ In the dual-task navigation protocol the +PD group had a lower walking speed and
 | Mistakes (DT)                    |                0 (0, 0) |                0 (0, 1) |                 0.065 |           8.9 |
 | Accuracy (DT), %                 |           100 (98, 100) |            98 (93, 100) |                   0.2 |           5.6 |
 | Answer time (DT), s              |       1.12 (1.03, 1.28) |       1.16 (1.03, 1.30) |                   0.6 |           4.4 |
-: Performance variables, protocol 3. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum exact test; Wilcoxon rank sum test. ^3^False discovery rate correction for multiple testing. {#tbl:perf_protocol_3} 
+: Performance variables, dual-task navigation protocol. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum exact test; Wilcoxon rank sum test. ^3^False discovery rate correction for multiple testing. {#tbl:perf_protocol_3} 
 
 ## Cluster formation
 
@@ -280,7 +280,7 @@ Furthermore, the lower performing cluster in the +PD group was characterized by 
 | MDS-UPDRS III                | N/A            | N/A            | N/A   | 22 (14, 31)    | 30 (21, 35)    | **0.029** |
 | Disease duration, yrs        | N/A            | N/A            | N/A   | 4.0 (2.5, 6.0) | 4.5 (3.0, 6.0) | 0.6   |
 | Hoehn & Yahr stage (counts)<sup>3</sup>  | N/A            | N/A            | N/A   | I: 2, II: 16, III: 6, IV: 0 | I: 0, II: 5, III: 10, IV: 1 | **0.015**   |
-: Clinical & neuropsychological variables. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum test; Wilcoxon rank sum exact test; Fisher’s exact test. ^3^ missing n=2 {#tbl:clinical_psych_vars} 
+: Clinical & neuropsychological variables. Abbreviations: OA, older adults; PD, Parkinson's disease. ^1^Median (Q1, Q3). ^2^Wilcoxon rank sum test; Wilcoxon rank sum exact test; Fisher’s exact test. ^3^Missing n=2 {#tbl:clinical_psych_vars} 
 
 
 ## Prefrontal cortex activity
@@ -324,26 +324,66 @@ However, directly contrasting activation between high and low performing cluster
 
 # Discussion
 
-## High performers and low performers
+In this study, navigated walking performance with and without a dual-task was compared between +OA and people with +PD. Compared to +OA, people with +PD exhibited a lower walking speed and shorter stride length, higher step time variability, lower turn velocity and higher dual-task costs on stride length. Data-driven cluster analyses identified distinct high-performing and low-performing subgroups within both +OA and people with +PD. These performance subgroups were separated by certain similar broad performance factors such as walking speed, but some factors differentiating cluster membership varied between +OA and people with +PD. Characterization of these distinct clusters through clinical, neuropsychological, +fNIRS data revealed that lower performance was associated with older age, reduced physical function, and a possible inability to allocate sufficient +dlPFC resources during task performance, suggesting reduced compensatory capacity in both healthy aging and Parkinson's disease.
 
-In both +OA and people with +PD, distinct high-performing and low-performing clusters were formed. The clusters were separated across a range of performance variables, including walking speed, turning velocity and in the +PD group also navigation mistakes and auditory Stroop accuracy. This indicates that performance during this type of complex walking task is more general than specific, and participants did not prioritize or happen to perform well in specific domains of motor or cognitive performance. Links between gait speed and turning velocity have been found in earlier studies in +OA [@weston2024] as well as in people with +PD [@peterson2019].
+## Typical Parkinsonian gait deficits extend to navigated walking
 
-The lower walking speed in the lower performing cluster was connected to a lower cadence in the +OA group and a lower stride length in the +PD group. The specific issues with scaling motor output and therefore stride length is well known in +PD [@morris1994a; @morris1994; @morris1996], and can be attributed to dysfunctional basal ganglia-thalamo-cortical motor circuits [@morris1994]. Meanwhile, in +OA, cadence has been found to serve as a proxy for activity intensity [@rubin2025]. Further, the ability to walk with a cadence above 100 steps/min has been found to predict a reduction in mortality [@brown2014]. In this study, the lower performing +OA group with a lower cadence (97-101 steps/min) did indeed have a lower level of physical activity quantified in terms of Frändin-Grimby scores.
+Comparing people with +PD to +OA, typical bradykinetic gait characteristics often found during straight walking [@mirelman2019] were present during navigated walking: specifically, a lower walking speed and stride length. The specific issues with scaling motor output and therefore stride length are well known in +PD [@morris1994a; @morris1994; @morris1996], and can be attributed to dysfunctional basal ganglia-thalamo-cortical motor circuits [@morris1994]. 
 
-Lower performing clusters in both groups had higher step time variability during straight walking. Additionally, the +PD group had higher dual-task costs. A higher step time variability has been argued to be associated with a lower gait automaticity [@gilat2017] in accordance with a framework proposed in [@wu2015a]. The dual-task costs also indicate a lower gait automaticity [@clark2015]. Given that the lower performing cluster in the +PD group also had more navigation mistakes and lower auditory Stroop accuracy, this might indicate that this cluster did not have enough spare capacity to deal with the additional task demands [@wu2015a].
+People with +PD also exhibited a higher step time variability and dual-task costs on stride length. A higher step time variability has been argued to be associated with a lower gait automaticity [@gilat2017] in accordance with a framework proposed in [@wu2015a]. This also explains the higher dual-task costs: a lower gait automaticity means less neural resources such as attention are available to dedicate to a simultaneous task [@wu2015a], in this case the auditory Stroop task.
+
+The slower turn velocity observed during navigation in the +PD group is consistent with previous findings [@mellone2016; @vitorio2021], and has been proposed to reflect an adaptive strategy in which turns are deliberately slowed to accommodate postural instability [@mellone2016].
+
+## Performance clusters represent overall complex walking capacity
+
+In both the +OA and +PD groups, distinct high-performing and low-performing clusters were formed after data-driven cluster analyses. These clusters differed across a range of performance variables, including walking speed and turn velocity. Lower performing clusters walked and turned slower. In the +OA group, the lower walking speed was connected to a lower cadence, slower stance and single support time. In the +PD group, it was related to a lower stride length instead.
+
+The lower-performing clusters did not seem to sacrifice performance in one domain to maintain performance in another. For example, lower walking or turning performance was not accompanied by better auditory Stroop accuracy. Previous studies have reported an association between reduced gait speed and lower turning velocity in people with OA [@weston2024], where this pattern has been interpreted as a marker of age-related mobility decline. Similar associations have also been observed in people with PD [@peterson2019], although in that population they have been linked to disease-specific motor impairments.
+
+This suggests that performance during this type of complex walking task reflects a more general level of mobility function or complex walking capacity, rather than strengths or weaknesses in specific motor or cognitive domains. Participants who performed poorly tended to do so across several aspects of gait and turning performance, rather than compensating with better performance in particular domains.
+
+## Complex walking capacity was reflected in temporal parameters in older adults
+
+In the +OA group, differences between high and low performers were reflected in temporal gait parameters. Lower-performing participants had a lower cadence and longer stance and single-support times, indicating an overall slower gait cycle. Previous work shows that in +OA, cadence can serve as a proxy for walking intensity and functional capacity, including performance during the 6-minute walk test [@rubin2025]. These findings suggest that complex walking performance in +OA may be closely linked to overall functional walking capacity.
+
+Furthermore, maintaining a cadence above 100 steps/min has been associated with reduced mortality risk in +OA, linked to overall physical function [@brown2014]. In this study, the lower-performing +OA cluster had a median cadence ranging from 95 steps/min during navigation, to 101 steps/min during straight walking. The lower-performing cluster also had a lower level of daily physical activity quantified in terms of Frändin-Grimby scores. Together, these findings suggest that performance during complex walking in +OA may be influenced by general physical capacity and activity level.
+
+## Complex walking capacity was associated with disease-related gait impairment in PD
+
+In contrast to the +OA group, lower complex walking performance in the +PD group was primarily characterized by shorter stride length, lower turn velocity, higher dual-task costs, and lower accuracy in task accuracy while dual-tasking. Therefore, lower performance was associated with a greater degree of disease-specific gait impairments. Specifically, the higher dual-task costs and lower task accuracy indicate a limited spare attentional capacity due to a greater degree of impaired gait automaticity [@wu2015a].
+
+In concordance with the greater degree of disease-specific gait impairments, the lower-performing cluster also displayed signs of more advanced disease, including worse UPDRS scores and higher Hoehn and Yahr stages, although disease duration was not different between the clusters. Along with more advanced disease, the lower-performing cluster displayed poorer performance on neuropsychological measures of executive function, including the +TMT, +CWIT, and verbal fluency assessments. Since executive function likely plays a key role in compensating for the loss of automatic motor control in PD [@yogev-seligmann2008], deficits in these domains may have contributed to the reduced ability to manage the simultaneous cognitive and locomotor demands of complex walking.
+
+Taken together, the findings suggest that lower complex walking performance in PD reflects an interaction between disease-related motor impairment, reduced gait automaticity, and diminished cognitive resources, rather than isolated deficits in either gait or cognition alone.
+
+## Age might exacerbate gait impairment and reduced automaticity
 
 When examining which participants formed certain clusters, age stood out as significantly higher in the +PD lower performing cluster (median 72 years in one cluster, 65 in other). Furthermore, while it was not significantly higher in the +OA lower performing cluster, there was a similar trend of a higher age in the lower performing cluster (72 years versus 68). Interestingly, an age around 70 years has been found in earlier studies to be the point where gait performance starts to significantly decrease in aging, due to reduced gait automaticity and a limit to the mechanism by which the brain compensates for this reduced automaticity [@nobrega-sousa2020].
 
-## Higher performing cluster has capacity for dlPFC increases
+## Preserved dlPFC recruitment may distinguish higher performers
 
-It was only the high performing clusters that consistently showed an increase in +dlPFC activity during single- and dual-task navigation considering +ROI results, although no single channel showed a significant contrast. In protocol 2, the high performance cluster had a +dlPFC activity increase during navigation for both +OA and +PD, while in protocol 3 only the high performance cluster in +PD had an increase in activity during both single- and dual-task navigation. The reason for a lack of increase in cortical activity in +OA during protocol 3 could possibly be due to learning effects, since the same navigation task is repeated across the protocols.
+The +fNIRS results provide a potential neural explanation for these performance differences. In both +OA and +PD, it was only the high performing clusters that consistently showed an increase in +dlPFC activity during single- and dual-task navigation. During the *navigation protocol*, this pattern was observed in both OA and PD. During the *dual-task navigation protocol*, significant +dlPFC increases were maintained only in the higher-performing PD cluster. The absence of a similar response in OA could possibly be due to learning or habituation effects, since the same navigation task is repeated across the protocols. 
+
+Furthermore, direct contrasts between high-performing and low-performing clusters did not reveal significant differences in +dlPFC activation. Given the relatively small sample sizes within each cluster, larger studies will be necessary to determine whether this finding reflects a true group difference or limited statistical power.
 
 The split around 70 years between low and high performing clusters is interesting in terms of the +CRUNCH [@reuter-lorenz2008]. The +CRUNCH model has been proposed as a mechanism by which the brain is able to compensate for age-related structural degeneration [@reuter-lorenz2008] or pathological structural degeneration by recruiting a more distributed neural network to maintain task performance [@bunzeck2024]. However, importantly, this mechanism has been hypothesized to break down at a certain limit of structural degeneration, at which point task performance degrades [@bunzeck2024]. The finding that the higher performing cluster, who have maintained performance during the motor tasks, but not the lower performing cluster manage to recruit the +dlPFC to cope with task demand aligns with this model. The specific point around 70 years of age has been found to be a compensatory mechanism limit in another study in +OA as well [@nobrega-sousa2020].
 
 Understanding where such a ceiling effect of the compensatory mechanism lies, might be useful in informing interventions and rehabilitative strategies where these mechanisms can be utilized to maintain gait performance in everyday life, or find strategies to cope with a reduced ability to compensate.
 
+## Limitations
+
+This study had several limitations. Optode placement variation errors and head geometry variation was not quantified via e.g. photogrammetric co-registration, even though head-size adjusted caps were used to minimize the error. Influence from systemic physiology like heart rate and breathing was not measured, and some channels suffered from poor signal quality and were thus excluded.
+
 # Conclusion
 
 Performance of navigated walking was split in generally higher and lower performing clusters, and not specific domains of task performance. Decline in performance was connected to age, physical activity, and a lack of capacity for +dlPFC increases perhaps due to a ceiling limit on compensatory mechanisms.
+
+# Data availability
+
+All code is available via <https://github.com/alkvi/fNIRS_navigation_study>. The original raw data are not publicly available due to Swedish/EU law, but are located with restricted access in a central repository (<https://doi.org/10.48723/vscr-eq07>), where sharing will be regulated via a data transfer and user agreement upon a reasonable request.
+
+# Acknowledgements
+
+We thank all participants who made this study possible and the uMOVE core facility.
 
 # References
